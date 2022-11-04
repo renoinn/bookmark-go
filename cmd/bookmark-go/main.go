@@ -18,7 +18,7 @@ func main() {
     ctx := context.Background()
 
     // Create a local migration directory able to understand Atlas migration file format for replay.
-    dir, err := atlas.NewLocalDir("../../datasource/ent/migrate/migrations")
+    dir, err := atlas.NewLocalDir("datasource/ent/migrate/migrations")
     if err != nil {
         log.Fatalf("failed creating atlas migration directory: %v", err)
     }
