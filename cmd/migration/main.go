@@ -26,7 +26,7 @@ func main() {
     // Migrate diff options.
     opts := []schema.MigrateOption{
         schema.WithDir(dir),                         // provide migration directory
-        schema.WithMigrationMode(schema.ModeReplay), // provide migration mode
+        schema.WithMigrationMode(schema.ModeInspect), // provide migration mode
         schema.WithDialect(dialect.MySQL),           // Ent dialect to use
         schema.WithFormatter(atlas.DefaultFormatter),
     }
@@ -36,16 +36,4 @@ func main() {
     if err != nil {
         log.Fatalf("failed generating migration file: %v", err)
     }
-
-    /*
-    client, err := ent.Open("mysql", dataSourceName)
-    if err != nil {
-        log.Fatalf("failed opening connection to mysql: %v", err)
-    }
-    defer client.Close()
-    // Run the auto migration tool.
-    if err := client.Schema.Create(context.Background()); err != nil {
-        log.Fatalf("failed creating schema resources: %v", err)
-    }
-    */
 }

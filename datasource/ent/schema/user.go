@@ -14,17 +14,19 @@ type User struct {
 
 // User Annotations
 func (User) Annotations() []schema.Annotation {
-    return []schema.Annotation{
-        entsql.Annotation{Table: "users"},
-    }
+	return []schema.Annotation{
+		entsql.Annotation{Table: "users"},
+	}
 }
 
 // Fields of the User.
 func (User) Fields() []ent.Field {
-	return []ent.Field {
-        field.String("name"),
-        field.String("email").Unique(),
-    }
+	return []ent.Field{
+		field.String("name"),
+		field.String("email").
+			MaxLen(100).
+			Unique(),
+	}
 }
 
 // Edges of the User.

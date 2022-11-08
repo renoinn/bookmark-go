@@ -2,8 +2,58 @@
 
 package ent
 
+import (
+	"github.com/renoinn/bookmark-go/datasource/ent/schema"
+	"github.com/renoinn/bookmark-go/datasource/ent/site"
+	"github.com/renoinn/bookmark-go/datasource/ent/user"
+)
+
 // The init function reads all schema descriptors with runtime code
 // (default values, validators, hooks and policies) and stitches it
 // to their package variables.
 func init() {
+	siteFields := schema.Site{}.Fields()
+	_ = siteFields
+	// siteDescURL is the schema descriptor for url field.
+	siteDescURL := siteFields[0].Descriptor()
+	// site.URLValidator is a validator for the "url" field. It is called by the builders before save.
+	site.URLValidator = func() func(string) error {
+		validators := siteDescURL.Validators
+		fns := [...]func(string) error{
+			validators[0].(func(string) error),
+			validators[1].(func(string) error),
+		}
+		return func(url string) error {
+			for _, fn := range fns {
+				if err := fn(url); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
+	// siteDescTitle is the schema descriptor for title field.
+	siteDescTitle := siteFields[1].Descriptor()
+	// site.TitleValidator is a validator for the "title" field. It is called by the builders before save.
+	site.TitleValidator = func() func(string) error {
+		validators := siteDescTitle.Validators
+		fns := [...]func(string) error{
+			validators[0].(func(string) error),
+			validators[1].(func(string) error),
+		}
+		return func(title string) error {
+			for _, fn := range fns {
+				if err := fn(title); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
+	userFields := schema.User{}.Fields()
+	_ = userFields
+	// userDescEmail is the schema descriptor for email field.
+	userDescEmail := userFields[1].Descriptor()
+	// user.EmailValidator is a validator for the "email" field. It is called by the builders before save.
+	user.EmailValidator = userDescEmail.Validators[0].(func(string) error)
 }
