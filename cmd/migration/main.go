@@ -14,7 +14,7 @@ import (
 )
 
 func main() {
-    dataSourceName := fmt.Sprintf("%s:%s@tcp(%s)/%s?charset=utf8&parseTime=True", "user", "p@ssword", "localhost:3306", "bookmark_db")
+    dataSourceName := fmt.Sprintf("mysql://%s:%s@%s/%s?charset=utf8&parseTime=True", "bkmk_user", "bkmk_password", "localhost:3306", "bookmark_db")
     ctx := context.Background()
 
     // Create a local migration directory able to understand Atlas migration file format for replay.
