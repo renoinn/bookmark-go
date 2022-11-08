@@ -3,8 +3,10 @@
 package ent
 
 import (
+	"github.com/renoinn/bookmark-go/datasource/ent/bookmark"
 	"github.com/renoinn/bookmark-go/datasource/ent/schema"
 	"github.com/renoinn/bookmark-go/datasource/ent/site"
+	"github.com/renoinn/bookmark-go/datasource/ent/tag"
 	"github.com/renoinn/bookmark-go/datasource/ent/user"
 )
 
@@ -12,6 +14,16 @@ import (
 // (default values, validators, hooks and policies) and stitches it
 // to their package variables.
 func init() {
+	bookmarkFields := schema.Bookmark{}.Fields()
+	_ = bookmarkFields
+	// bookmarkDescTitle is the schema descriptor for title field.
+	bookmarkDescTitle := bookmarkFields[0].Descriptor()
+	// bookmark.TitleValidator is a validator for the "title" field. It is called by the builders before save.
+	bookmark.TitleValidator = bookmarkDescTitle.Validators[0].(func(string) error)
+	// bookmarkDescNote is the schema descriptor for note field.
+	bookmarkDescNote := bookmarkFields[1].Descriptor()
+	// bookmark.NoteValidator is a validator for the "note" field. It is called by the builders before save.
+	bookmark.NoteValidator = bookmarkDescNote.Validators[0].(func(string) error)
 	siteFields := schema.Site{}.Fields()
 	_ = siteFields
 	// siteDescURL is the schema descriptor for url field.
@@ -50,6 +62,16 @@ func init() {
 			return nil
 		}
 	}()
+	tagFields := schema.Tag{}.Fields()
+	_ = tagFields
+	// tagDescName is the schema descriptor for name field.
+	tagDescName := tagFields[0].Descriptor()
+	// tag.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	tag.NameValidator = tagDescName.Validators[0].(func(string) error)
+	// tagDescCount is the schema descriptor for count field.
+	tagDescCount := tagFields[1].Descriptor()
+	// tag.DefaultCount holds the default value on creation for the count field.
+	tag.DefaultCount = tagDescCount.Default.(int)
 	userFields := schema.User{}.Fields()
 	_ = userFields
 	// userDescEmail is the schema descriptor for email field.

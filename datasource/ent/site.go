@@ -19,6 +19,27 @@ type Site struct {
 	URL string `json:"url,omitempty"`
 	// Title holds the value of the "title" field.
 	Title string `json:"title,omitempty"`
+	// Edges holds the relations/edges for other nodes in the graph.
+	// The values are being populated by the SiteQuery when eager-loading is set.
+	Edges SiteEdges `json:"edges"`
+}
+
+// SiteEdges holds the relations/edges for other nodes in the graph.
+type SiteEdges struct {
+	// Bookmark holds the value of the bookmark edge.
+	Bookmark []*Bookmark `json:"bookmark,omitempty"`
+	// loadedTypes holds the information for reporting if a
+	// type was loaded (or requested) in eager-loading or not.
+	loadedTypes [1]bool
+}
+
+// BookmarkOrErr returns the Bookmark value or an error if the edge
+// was not loaded in eager-loading.
+func (e SiteEdges) BookmarkOrErr() ([]*Bookmark, error) {
+	if e.loadedTypes[0] {
+		return e.Bookmark, nil
+	}
+	return nil, &NotLoadedError{edge: "bookmark"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -66,6 +87,11 @@ func (s *Site) assignValues(columns []string, values []any) error {
 		}
 	}
 	return nil
+}
+
+// QueryBookmark queries the "bookmark" edge of the Site entity.
+func (s *Site) QueryBookmark() *BookmarkQuery {
+	return (&SiteClient{config: s.config}).QueryBookmark(s)
 }
 
 // Update returns a builder for updating this Site.

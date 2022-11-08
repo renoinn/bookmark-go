@@ -9,6 +9,19 @@ import (
 	"github.com/renoinn/bookmark-go/datasource/ent"
 )
 
+// The BookmarkFunc type is an adapter to allow the use of ordinary
+// function as Bookmark mutator.
+type BookmarkFunc func(context.Context, *ent.BookmarkMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f BookmarkFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	mv, ok := m.(*ent.BookmarkMutation)
+	if !ok {
+		return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.BookmarkMutation", m)
+	}
+	return f(ctx, mv)
+}
+
 // The SiteFunc type is an adapter to allow the use of ordinary
 // function as Site mutator.
 type SiteFunc func(context.Context, *ent.SiteMutation) (ent.Value, error)
@@ -18,6 +31,19 @@ func (f SiteFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error)
 	mv, ok := m.(*ent.SiteMutation)
 	if !ok {
 		return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.SiteMutation", m)
+	}
+	return f(ctx, mv)
+}
+
+// The TagFunc type is an adapter to allow the use of ordinary
+// function as Tag mutator.
+type TagFunc func(context.Context, *ent.TagMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f TagFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	mv, ok := m.(*ent.TagMutation)
+	if !ok {
+		return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.TagMutation", m)
 	}
 	return f(ctx, mv)
 }

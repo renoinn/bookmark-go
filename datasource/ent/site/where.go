@@ -4,6 +4,7 @@ package site
 
 import (
 	"entgo.io/ent/dialect/sql"
+	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/renoinn/bookmark-go/datasource/ent/predicate"
 )
 
@@ -287,6 +288,34 @@ func TitleEqualFold(v string) predicate.Site {
 func TitleContainsFold(v string) predicate.Site {
 	return predicate.Site(func(s *sql.Selector) {
 		s.Where(sql.ContainsFold(s.C(FieldTitle), v))
+	})
+}
+
+// HasBookmark applies the HasEdge predicate on the "bookmark" edge.
+func HasBookmark() predicate.Site {
+	return predicate.Site(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.To(BookmarkTable, FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, false, BookmarkTable, BookmarkPrimaryKey...),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasBookmarkWith applies the HasEdge predicate on the "bookmark" edge with a given conditions (other predicates).
+func HasBookmarkWith(preds ...predicate.Bookmark) predicate.Site {
+	return predicate.Site(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.To(BookmarkInverseTable, FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, false, BookmarkTable, BookmarkPrimaryKey...),
+		)
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
 	})
 }
 

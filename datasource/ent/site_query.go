@@ -4,12 +4,14 @@ package ent
 
 import (
 	"context"
+	"database/sql/driver"
 	"fmt"
 	"math"
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/renoinn/bookmark-go/datasource/ent/bookmark"
 	"github.com/renoinn/bookmark-go/datasource/ent/predicate"
 	"github.com/renoinn/bookmark-go/datasource/ent/site"
 )
@@ -17,12 +19,13 @@ import (
 // SiteQuery is the builder for querying Site entities.
 type SiteQuery struct {
 	config
-	limit      *int
-	offset     *int
-	unique     *bool
-	order      []OrderFunc
-	fields     []string
-	predicates []predicate.Site
+	limit        *int
+	offset       *int
+	unique       *bool
+	order        []OrderFunc
+	fields       []string
+	predicates   []predicate.Site
+	withBookmark *BookmarkQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -57,6 +60,28 @@ func (sq *SiteQuery) Unique(unique bool) *SiteQuery {
 func (sq *SiteQuery) Order(o ...OrderFunc) *SiteQuery {
 	sq.order = append(sq.order, o...)
 	return sq
+}
+
+// QueryBookmark chains the current query on the "bookmark" edge.
+func (sq *SiteQuery) QueryBookmark() *BookmarkQuery {
+	query := &BookmarkQuery{config: sq.config}
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := sq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := sq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(site.Table, site.FieldID, selector),
+			sqlgraph.To(bookmark.Table, bookmark.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, false, site.BookmarkTable, site.BookmarkPrimaryKey...),
+		)
+		fromU = sqlgraph.SetNeighbors(sq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
 }
 
 // First returns the first Site entity from the query.
@@ -235,16 +260,28 @@ func (sq *SiteQuery) Clone() *SiteQuery {
 		return nil
 	}
 	return &SiteQuery{
-		config:     sq.config,
-		limit:      sq.limit,
-		offset:     sq.offset,
-		order:      append([]OrderFunc{}, sq.order...),
-		predicates: append([]predicate.Site{}, sq.predicates...),
+		config:       sq.config,
+		limit:        sq.limit,
+		offset:       sq.offset,
+		order:        append([]OrderFunc{}, sq.order...),
+		predicates:   append([]predicate.Site{}, sq.predicates...),
+		withBookmark: sq.withBookmark.Clone(),
 		// clone intermediate query.
 		sql:    sq.sql.Clone(),
 		path:   sq.path,
 		unique: sq.unique,
 	}
+}
+
+// WithBookmark tells the query-builder to eager-load the nodes that are connected to
+// the "bookmark" edge. The optional arguments are used to configure the query builder of the edge.
+func (sq *SiteQuery) WithBookmark(opts ...func(*BookmarkQuery)) *SiteQuery {
+	query := &BookmarkQuery{config: sq.config}
+	for _, opt := range opts {
+		opt(query)
+	}
+	sq.withBookmark = query
+	return sq
 }
 
 // GroupBy is used to group vertices by one or more fields/columns.
@@ -318,8 +355,11 @@ func (sq *SiteQuery) prepareQuery(ctx context.Context) error {
 
 func (sq *SiteQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Site, error) {
 	var (
-		nodes = []*Site{}
-		_spec = sq.querySpec()
+		nodes       = []*Site{}
+		_spec       = sq.querySpec()
+		loadedTypes = [1]bool{
+			sq.withBookmark != nil,
+		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
 		return (*Site).scanValues(nil, columns)
@@ -327,6 +367,7 @@ func (sq *SiteQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Site, e
 	_spec.Assign = func(columns []string, values []any) error {
 		node := &Site{config: sq.config}
 		nodes = append(nodes, node)
+		node.Edges.loadedTypes = loadedTypes
 		return node.assignValues(columns, values)
 	}
 	for i := range hooks {
@@ -338,7 +379,73 @@ func (sq *SiteQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Site, e
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
+	if query := sq.withBookmark; query != nil {
+		if err := sq.loadBookmark(ctx, query, nodes,
+			func(n *Site) { n.Edges.Bookmark = []*Bookmark{} },
+			func(n *Site, e *Bookmark) { n.Edges.Bookmark = append(n.Edges.Bookmark, e) }); err != nil {
+			return nil, err
+		}
+	}
 	return nodes, nil
+}
+
+func (sq *SiteQuery) loadBookmark(ctx context.Context, query *BookmarkQuery, nodes []*Site, init func(*Site), assign func(*Site, *Bookmark)) error {
+	edgeIDs := make([]driver.Value, len(nodes))
+	byID := make(map[int]*Site)
+	nids := make(map[int]map[*Site]struct{})
+	for i, node := range nodes {
+		edgeIDs[i] = node.ID
+		byID[node.ID] = node
+		if init != nil {
+			init(node)
+		}
+	}
+	query.Where(func(s *sql.Selector) {
+		joinT := sql.Table(site.BookmarkTable)
+		s.Join(joinT).On(s.C(bookmark.FieldID), joinT.C(site.BookmarkPrimaryKey[1]))
+		s.Where(sql.InValues(joinT.C(site.BookmarkPrimaryKey[0]), edgeIDs...))
+		columns := s.SelectedColumns()
+		s.Select(joinT.C(site.BookmarkPrimaryKey[0]))
+		s.AppendSelect(columns...)
+		s.SetDistinct(false)
+	})
+	if err := query.prepareQuery(ctx); err != nil {
+		return err
+	}
+	neighbors, err := query.sqlAll(ctx, func(_ context.Context, spec *sqlgraph.QuerySpec) {
+		assign := spec.Assign
+		values := spec.ScanValues
+		spec.ScanValues = func(columns []string) ([]any, error) {
+			values, err := values(columns[1:])
+			if err != nil {
+				return nil, err
+			}
+			return append([]any{new(sql.NullInt64)}, values...), nil
+		}
+		spec.Assign = func(columns []string, values []any) error {
+			outValue := int(values[0].(*sql.NullInt64).Int64)
+			inValue := int(values[1].(*sql.NullInt64).Int64)
+			if nids[inValue] == nil {
+				nids[inValue] = map[*Site]struct{}{byID[outValue]: {}}
+				return assign(columns[1:], values[1:])
+			}
+			nids[inValue][byID[outValue]] = struct{}{}
+			return nil
+		}
+	})
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		nodes, ok := nids[n.ID]
+		if !ok {
+			return fmt.Errorf(`unexpected "bookmark" node returned %v`, n.ID)
+		}
+		for kn := range nodes {
+			assign(kn, n)
+		}
+	}
+	return nil
 }
 
 func (sq *SiteQuery) sqlCount(ctx context.Context) (int, error) {

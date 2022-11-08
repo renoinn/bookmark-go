@@ -2,6 +2,7 @@ package schema
 
 import (
 	"entgo.io/ent"
+	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
 )
 
@@ -24,5 +25,7 @@ func (Site) Fields() []ent.Field {
 
 // Edges of the Site.
 func (Site) Edges() []ent.Edge {
-	return nil
+	return []ent.Edge{
+		edge.To("bookmark", Bookmark.Type),
+	}
 }

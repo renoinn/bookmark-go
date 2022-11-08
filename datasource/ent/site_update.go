@@ -10,6 +10,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/renoinn/bookmark-go/datasource/ent/bookmark"
 	"github.com/renoinn/bookmark-go/datasource/ent/predicate"
 	"github.com/renoinn/bookmark-go/datasource/ent/site"
 )
@@ -39,9 +40,45 @@ func (su *SiteUpdate) SetTitle(s string) *SiteUpdate {
 	return su
 }
 
+// AddBookmarkIDs adds the "bookmark" edge to the Bookmark entity by IDs.
+func (su *SiteUpdate) AddBookmarkIDs(ids ...int) *SiteUpdate {
+	su.mutation.AddBookmarkIDs(ids...)
+	return su
+}
+
+// AddBookmark adds the "bookmark" edges to the Bookmark entity.
+func (su *SiteUpdate) AddBookmark(b ...*Bookmark) *SiteUpdate {
+	ids := make([]int, len(b))
+	for i := range b {
+		ids[i] = b[i].ID
+	}
+	return su.AddBookmarkIDs(ids...)
+}
+
 // Mutation returns the SiteMutation object of the builder.
 func (su *SiteUpdate) Mutation() *SiteMutation {
 	return su.mutation
+}
+
+// ClearBookmark clears all "bookmark" edges to the Bookmark entity.
+func (su *SiteUpdate) ClearBookmark() *SiteUpdate {
+	su.mutation.ClearBookmark()
+	return su
+}
+
+// RemoveBookmarkIDs removes the "bookmark" edge to Bookmark entities by IDs.
+func (su *SiteUpdate) RemoveBookmarkIDs(ids ...int) *SiteUpdate {
+	su.mutation.RemoveBookmarkIDs(ids...)
+	return su
+}
+
+// RemoveBookmark removes "bookmark" edges to Bookmark entities.
+func (su *SiteUpdate) RemoveBookmark(b ...*Bookmark) *SiteUpdate {
+	ids := make([]int, len(b))
+	for i := range b {
+		ids[i] = b[i].ID
+	}
+	return su.RemoveBookmarkIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -143,6 +180,60 @@ func (su *SiteUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value, ok := su.mutation.Title(); ok {
 		_spec.SetField(site.FieldTitle, field.TypeString, value)
 	}
+	if su.mutation.BookmarkCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   site.BookmarkTable,
+			Columns: site.BookmarkPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: bookmark.FieldID,
+				},
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := su.mutation.RemovedBookmarkIDs(); len(nodes) > 0 && !su.mutation.BookmarkCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   site.BookmarkTable,
+			Columns: site.BookmarkPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: bookmark.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := su.mutation.BookmarkIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   site.BookmarkTable,
+			Columns: site.BookmarkPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: bookmark.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	if n, err = sqlgraph.UpdateNodes(ctx, su.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{site.Label}
@@ -174,9 +265,45 @@ func (suo *SiteUpdateOne) SetTitle(s string) *SiteUpdateOne {
 	return suo
 }
 
+// AddBookmarkIDs adds the "bookmark" edge to the Bookmark entity by IDs.
+func (suo *SiteUpdateOne) AddBookmarkIDs(ids ...int) *SiteUpdateOne {
+	suo.mutation.AddBookmarkIDs(ids...)
+	return suo
+}
+
+// AddBookmark adds the "bookmark" edges to the Bookmark entity.
+func (suo *SiteUpdateOne) AddBookmark(b ...*Bookmark) *SiteUpdateOne {
+	ids := make([]int, len(b))
+	for i := range b {
+		ids[i] = b[i].ID
+	}
+	return suo.AddBookmarkIDs(ids...)
+}
+
 // Mutation returns the SiteMutation object of the builder.
 func (suo *SiteUpdateOne) Mutation() *SiteMutation {
 	return suo.mutation
+}
+
+// ClearBookmark clears all "bookmark" edges to the Bookmark entity.
+func (suo *SiteUpdateOne) ClearBookmark() *SiteUpdateOne {
+	suo.mutation.ClearBookmark()
+	return suo
+}
+
+// RemoveBookmarkIDs removes the "bookmark" edge to Bookmark entities by IDs.
+func (suo *SiteUpdateOne) RemoveBookmarkIDs(ids ...int) *SiteUpdateOne {
+	suo.mutation.RemoveBookmarkIDs(ids...)
+	return suo
+}
+
+// RemoveBookmark removes "bookmark" edges to Bookmark entities.
+func (suo *SiteUpdateOne) RemoveBookmark(b ...*Bookmark) *SiteUpdateOne {
+	ids := make([]int, len(b))
+	for i := range b {
+		ids[i] = b[i].ID
+	}
+	return suo.RemoveBookmarkIDs(ids...)
 }
 
 // Select allows selecting one or more fields (columns) of the returned entity.
@@ -307,6 +434,60 @@ func (suo *SiteUpdateOne) sqlSave(ctx context.Context) (_node *Site, err error) 
 	}
 	if value, ok := suo.mutation.Title(); ok {
 		_spec.SetField(site.FieldTitle, field.TypeString, value)
+	}
+	if suo.mutation.BookmarkCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   site.BookmarkTable,
+			Columns: site.BookmarkPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: bookmark.FieldID,
+				},
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := suo.mutation.RemovedBookmarkIDs(); len(nodes) > 0 && !suo.mutation.BookmarkCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   site.BookmarkTable,
+			Columns: site.BookmarkPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: bookmark.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := suo.mutation.BookmarkIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   site.BookmarkTable,
+			Columns: site.BookmarkPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: bookmark.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	_node = &Site{config: suo.config}
 	_spec.Assign = _node.assignValues

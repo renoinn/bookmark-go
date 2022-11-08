@@ -19,6 +19,38 @@ type User struct {
 	Name string `json:"name,omitempty"`
 	// Email holds the value of the "email" field.
 	Email string `json:"email,omitempty"`
+	// Edges holds the relations/edges for other nodes in the graph.
+	// The values are being populated by the UserQuery when eager-loading is set.
+	Edges UserEdges `json:"edges"`
+}
+
+// UserEdges holds the relations/edges for other nodes in the graph.
+type UserEdges struct {
+	// Bookmark holds the value of the bookmark edge.
+	Bookmark []*Bookmark `json:"bookmark,omitempty"`
+	// Tag holds the value of the tag edge.
+	Tag []*Tag `json:"tag,omitempty"`
+	// loadedTypes holds the information for reporting if a
+	// type was loaded (or requested) in eager-loading or not.
+	loadedTypes [2]bool
+}
+
+// BookmarkOrErr returns the Bookmark value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) BookmarkOrErr() ([]*Bookmark, error) {
+	if e.loadedTypes[0] {
+		return e.Bookmark, nil
+	}
+	return nil, &NotLoadedError{edge: "bookmark"}
+}
+
+// TagOrErr returns the Tag value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) TagOrErr() ([]*Tag, error) {
+	if e.loadedTypes[1] {
+		return e.Tag, nil
+	}
+	return nil, &NotLoadedError{edge: "tag"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -66,6 +98,16 @@ func (u *User) assignValues(columns []string, values []any) error {
 		}
 	}
 	return nil
+}
+
+// QueryBookmark queries the "bookmark" edge of the User entity.
+func (u *User) QueryBookmark() *BookmarkQuery {
+	return (&UserClient{config: u.config}).QueryBookmark(u)
+}
+
+// QueryTag queries the "tag" edge of the User entity.
+func (u *User) QueryTag() *TagQuery {
+	return (&UserClient{config: u.config}).QueryTag(u)
 }
 
 // Update returns a builder for updating this User.

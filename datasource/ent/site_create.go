@@ -9,6 +9,7 @@ import (
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/renoinn/bookmark-go/datasource/ent/bookmark"
 	"github.com/renoinn/bookmark-go/datasource/ent/site"
 )
 
@@ -29,6 +30,21 @@ func (sc *SiteCreate) SetURL(s string) *SiteCreate {
 func (sc *SiteCreate) SetTitle(s string) *SiteCreate {
 	sc.mutation.SetTitle(s)
 	return sc
+}
+
+// AddBookmarkIDs adds the "bookmark" edge to the Bookmark entity by IDs.
+func (sc *SiteCreate) AddBookmarkIDs(ids ...int) *SiteCreate {
+	sc.mutation.AddBookmarkIDs(ids...)
+	return sc
+}
+
+// AddBookmark adds the "bookmark" edges to the Bookmark entity.
+func (sc *SiteCreate) AddBookmark(b ...*Bookmark) *SiteCreate {
+	ids := make([]int, len(b))
+	for i := range b {
+		ids[i] = b[i].ID
+	}
+	return sc.AddBookmarkIDs(ids...)
 }
 
 // Mutation returns the SiteMutation object of the builder.
@@ -157,6 +173,25 @@ func (sc *SiteCreate) createSpec() (*Site, *sqlgraph.CreateSpec) {
 	if value, ok := sc.mutation.Title(); ok {
 		_spec.SetField(site.FieldTitle, field.TypeString, value)
 		_node.Title = value
+	}
+	if nodes := sc.mutation.BookmarkIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   site.BookmarkTable,
+			Columns: site.BookmarkPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: bookmark.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec
 }
