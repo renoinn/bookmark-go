@@ -79,6 +79,20 @@ func IDLTE(id int) predicate.Bookmark {
 	})
 }
 
+// UserID applies equality check predicate on the "user_id" field. It's identical to UserIDEQ.
+func UserID(v int) predicate.Bookmark {
+	return predicate.Bookmark(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldUserID), v))
+	})
+}
+
+// SiteID applies equality check predicate on the "site_id" field. It's identical to SiteIDEQ.
+func SiteID(v int) predicate.Bookmark {
+	return predicate.Bookmark(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldSiteID), v))
+	})
+}
+
 // Title applies equality check predicate on the "title" field. It's identical to TitleEQ.
 func Title(v string) predicate.Bookmark {
 	return predicate.Bookmark(func(s *sql.Selector) {
@@ -90,6 +104,78 @@ func Title(v string) predicate.Bookmark {
 func Note(v string) predicate.Bookmark {
 	return predicate.Bookmark(func(s *sql.Selector) {
 		s.Where(sql.EQ(s.C(FieldNote), v))
+	})
+}
+
+// UserIDEQ applies the EQ predicate on the "user_id" field.
+func UserIDEQ(v int) predicate.Bookmark {
+	return predicate.Bookmark(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldUserID), v))
+	})
+}
+
+// UserIDNEQ applies the NEQ predicate on the "user_id" field.
+func UserIDNEQ(v int) predicate.Bookmark {
+	return predicate.Bookmark(func(s *sql.Selector) {
+		s.Where(sql.NEQ(s.C(FieldUserID), v))
+	})
+}
+
+// UserIDIn applies the In predicate on the "user_id" field.
+func UserIDIn(vs ...int) predicate.Bookmark {
+	v := make([]any, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Bookmark(func(s *sql.Selector) {
+		s.Where(sql.In(s.C(FieldUserID), v...))
+	})
+}
+
+// UserIDNotIn applies the NotIn predicate on the "user_id" field.
+func UserIDNotIn(vs ...int) predicate.Bookmark {
+	v := make([]any, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Bookmark(func(s *sql.Selector) {
+		s.Where(sql.NotIn(s.C(FieldUserID), v...))
+	})
+}
+
+// SiteIDEQ applies the EQ predicate on the "site_id" field.
+func SiteIDEQ(v int) predicate.Bookmark {
+	return predicate.Bookmark(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldSiteID), v))
+	})
+}
+
+// SiteIDNEQ applies the NEQ predicate on the "site_id" field.
+func SiteIDNEQ(v int) predicate.Bookmark {
+	return predicate.Bookmark(func(s *sql.Selector) {
+		s.Where(sql.NEQ(s.C(FieldSiteID), v))
+	})
+}
+
+// SiteIDIn applies the In predicate on the "site_id" field.
+func SiteIDIn(vs ...int) predicate.Bookmark {
+	v := make([]any, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Bookmark(func(s *sql.Selector) {
+		s.Where(sql.In(s.C(FieldSiteID), v...))
+	})
+}
+
+// SiteIDNotIn applies the NotIn predicate on the "site_id" field.
+func SiteIDNotIn(vs ...int) predicate.Bookmark {
+	v := make([]any, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Bookmark(func(s *sql.Selector) {
+		s.Where(sql.NotIn(s.C(FieldSiteID), v...))
 	})
 }
 
@@ -297,7 +383,7 @@ func HasSite() predicate.Bookmark {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
 			sqlgraph.To(SiteTable, FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, true, SiteTable, SitePrimaryKey...),
+			sqlgraph.Edge(sqlgraph.M2O, true, SiteTable, SiteColumn),
 		)
 		sqlgraph.HasNeighbors(s, step)
 	})
@@ -309,7 +395,7 @@ func HasSiteWith(preds ...predicate.Site) predicate.Bookmark {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
 			sqlgraph.To(SiteInverseTable, FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, true, SiteTable, SitePrimaryKey...),
+			sqlgraph.Edge(sqlgraph.M2O, true, SiteTable, SiteColumn),
 		)
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
@@ -325,7 +411,7 @@ func HasUser() predicate.Bookmark {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
 			sqlgraph.To(UserTable, FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, true, UserTable, UserPrimaryKey...),
+			sqlgraph.Edge(sqlgraph.M2O, true, UserTable, UserColumn),
 		)
 		sqlgraph.HasNeighbors(s, step)
 	})
@@ -337,35 +423,7 @@ func HasUserWith(preds ...predicate.User) predicate.Bookmark {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
 			sqlgraph.To(UserInverseTable, FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, true, UserTable, UserPrimaryKey...),
-		)
-		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
-			for _, p := range preds {
-				p(s)
-			}
-		})
-	})
-}
-
-// HasTag applies the HasEdge predicate on the "tag" edge.
-func HasTag() predicate.Bookmark {
-	return predicate.Bookmark(func(s *sql.Selector) {
-		step := sqlgraph.NewStep(
-			sqlgraph.From(Table, FieldID),
-			sqlgraph.To(TagTable, FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, false, TagTable, TagPrimaryKey...),
-		)
-		sqlgraph.HasNeighbors(s, step)
-	})
-}
-
-// HasTagWith applies the HasEdge predicate on the "tag" edge with a given conditions (other predicates).
-func HasTagWith(preds ...predicate.Tag) predicate.Bookmark {
-	return predicate.Bookmark(func(s *sql.Selector) {
-		step := sqlgraph.NewStep(
-			sqlgraph.From(Table, FieldID),
-			sqlgraph.To(TagInverseTable, FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, false, TagTable, TagPrimaryKey...),
+			sqlgraph.Edge(sqlgraph.M2O, true, UserTable, UserColumn),
 		)
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {

@@ -19,38 +19,6 @@ type Tag struct {
 	Name string `json:"name,omitempty"`
 	// Count holds the value of the "count" field.
 	Count int `json:"count,omitempty"`
-	// Edges holds the relations/edges for other nodes in the graph.
-	// The values are being populated by the TagQuery when eager-loading is set.
-	Edges TagEdges `json:"edges"`
-}
-
-// TagEdges holds the relations/edges for other nodes in the graph.
-type TagEdges struct {
-	// Bookmark holds the value of the bookmark edge.
-	Bookmark []*Bookmark `json:"bookmark,omitempty"`
-	// User holds the value of the user edge.
-	User []*User `json:"user,omitempty"`
-	// loadedTypes holds the information for reporting if a
-	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [2]bool
-}
-
-// BookmarkOrErr returns the Bookmark value or an error if the edge
-// was not loaded in eager-loading.
-func (e TagEdges) BookmarkOrErr() ([]*Bookmark, error) {
-	if e.loadedTypes[0] {
-		return e.Bookmark, nil
-	}
-	return nil, &NotLoadedError{edge: "bookmark"}
-}
-
-// UserOrErr returns the User value or an error if the edge
-// was not loaded in eager-loading.
-func (e TagEdges) UserOrErr() ([]*User, error) {
-	if e.loadedTypes[1] {
-		return e.User, nil
-	}
-	return nil, &NotLoadedError{edge: "user"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -98,16 +66,6 @@ func (t *Tag) assignValues(columns []string, values []any) error {
 		}
 	}
 	return nil
-}
-
-// QueryBookmark queries the "bookmark" edge of the Tag entity.
-func (t *Tag) QueryBookmark() *BookmarkQuery {
-	return (&TagClient{config: t.config}).QueryBookmark(t)
-}
-
-// QueryUser queries the "user" edge of the Tag entity.
-func (t *Tag) QueryUser() *UserQuery {
-	return (&TagClient{config: t.config}).QueryUser(t)
 }
 
 // Update returns a builder for updating this Tag.

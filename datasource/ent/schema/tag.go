@@ -2,7 +2,6 @@ package schema
 
 import (
 	"entgo.io/ent"
-	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
 )
 
@@ -23,9 +22,12 @@ func (Tag) Fields() []ent.Field {
 
 // Edges of the Tag.
 func (Tag) Edges() []ent.Edge {
-	return []ent.Edge{
-		edge.From("bookmark", Bookmark.Type).
-			Ref("tag"),
-		edge.To("user", User.Type),
-	}
+	return nil
+	/*
+		return []ent.Edge{
+			edge.From("bookmark", Bookmark.Type).
+				Ref("tag"),
+			edge.To("user", User.Type),
+		}
+	*/
 }

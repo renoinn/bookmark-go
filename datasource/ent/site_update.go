@@ -182,10 +182,10 @@ func (su *SiteUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if su.mutation.BookmarkCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.O2M,
 			Inverse: false,
 			Table:   site.BookmarkTable,
-			Columns: site.BookmarkPrimaryKey,
+			Columns: []string{site.BookmarkColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
@@ -198,10 +198,10 @@ func (su *SiteUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if nodes := su.mutation.RemovedBookmarkIDs(); len(nodes) > 0 && !su.mutation.BookmarkCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.O2M,
 			Inverse: false,
 			Table:   site.BookmarkTable,
-			Columns: site.BookmarkPrimaryKey,
+			Columns: []string{site.BookmarkColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
@@ -217,10 +217,10 @@ func (su *SiteUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if nodes := su.mutation.BookmarkIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.O2M,
 			Inverse: false,
 			Table:   site.BookmarkTable,
-			Columns: site.BookmarkPrimaryKey,
+			Columns: []string{site.BookmarkColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
@@ -437,10 +437,10 @@ func (suo *SiteUpdateOne) sqlSave(ctx context.Context) (_node *Site, err error) 
 	}
 	if suo.mutation.BookmarkCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.O2M,
 			Inverse: false,
 			Table:   site.BookmarkTable,
-			Columns: site.BookmarkPrimaryKey,
+			Columns: []string{site.BookmarkColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
@@ -453,10 +453,10 @@ func (suo *SiteUpdateOne) sqlSave(ctx context.Context) (_node *Site, err error) 
 	}
 	if nodes := suo.mutation.RemovedBookmarkIDs(); len(nodes) > 0 && !suo.mutation.BookmarkCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.O2M,
 			Inverse: false,
 			Table:   site.BookmarkTable,
-			Columns: site.BookmarkPrimaryKey,
+			Columns: []string{site.BookmarkColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
@@ -472,10 +472,10 @@ func (suo *SiteUpdateOne) sqlSave(ctx context.Context) (_node *Site, err error) 
 	}
 	if nodes := suo.mutation.BookmarkIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.O2M,
 			Inverse: false,
 			Table:   site.BookmarkTable,
-			Columns: site.BookmarkPrimaryKey,
+			Columns: []string{site.BookmarkColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{

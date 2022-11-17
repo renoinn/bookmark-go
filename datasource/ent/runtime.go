@@ -17,11 +17,11 @@ func init() {
 	bookmarkFields := schema.Bookmark{}.Fields()
 	_ = bookmarkFields
 	// bookmarkDescTitle is the schema descriptor for title field.
-	bookmarkDescTitle := bookmarkFields[0].Descriptor()
+	bookmarkDescTitle := bookmarkFields[2].Descriptor()
 	// bookmark.TitleValidator is a validator for the "title" field. It is called by the builders before save.
 	bookmark.TitleValidator = bookmarkDescTitle.Validators[0].(func(string) error)
 	// bookmarkDescNote is the schema descriptor for note field.
-	bookmarkDescNote := bookmarkFields[1].Descriptor()
+	bookmarkDescNote := bookmarkFields[3].Descriptor()
 	// bookmark.NoteValidator is a validator for the "note" field. It is called by the builders before save.
 	bookmark.NoteValidator = bookmarkDescNote.Validators[0].(func(string) error)
 	siteFields := schema.Site{}.Fields()

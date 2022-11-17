@@ -12,7 +12,6 @@ import (
 	"entgo.io/ent/schema/field"
 	"github.com/renoinn/bookmark-go/datasource/ent/bookmark"
 	"github.com/renoinn/bookmark-go/datasource/ent/predicate"
-	"github.com/renoinn/bookmark-go/datasource/ent/tag"
 	"github.com/renoinn/bookmark-go/datasource/ent/user"
 )
 
@@ -56,21 +55,6 @@ func (uu *UserUpdate) AddBookmark(b ...*Bookmark) *UserUpdate {
 	return uu.AddBookmarkIDs(ids...)
 }
 
-// AddTagIDs adds the "tag" edge to the Tag entity by IDs.
-func (uu *UserUpdate) AddTagIDs(ids ...int) *UserUpdate {
-	uu.mutation.AddTagIDs(ids...)
-	return uu
-}
-
-// AddTag adds the "tag" edges to the Tag entity.
-func (uu *UserUpdate) AddTag(t ...*Tag) *UserUpdate {
-	ids := make([]int, len(t))
-	for i := range t {
-		ids[i] = t[i].ID
-	}
-	return uu.AddTagIDs(ids...)
-}
-
 // Mutation returns the UserMutation object of the builder.
 func (uu *UserUpdate) Mutation() *UserMutation {
 	return uu.mutation
@@ -95,27 +79,6 @@ func (uu *UserUpdate) RemoveBookmark(b ...*Bookmark) *UserUpdate {
 		ids[i] = b[i].ID
 	}
 	return uu.RemoveBookmarkIDs(ids...)
-}
-
-// ClearTag clears all "tag" edges to the Tag entity.
-func (uu *UserUpdate) ClearTag() *UserUpdate {
-	uu.mutation.ClearTag()
-	return uu
-}
-
-// RemoveTagIDs removes the "tag" edge to Tag entities by IDs.
-func (uu *UserUpdate) RemoveTagIDs(ids ...int) *UserUpdate {
-	uu.mutation.RemoveTagIDs(ids...)
-	return uu
-}
-
-// RemoveTag removes "tag" edges to Tag entities.
-func (uu *UserUpdate) RemoveTag(t ...*Tag) *UserUpdate {
-	ids := make([]int, len(t))
-	for i := range t {
-		ids[i] = t[i].ID
-	}
-	return uu.RemoveTagIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -214,10 +177,10 @@ func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if uu.mutation.BookmarkCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.O2M,
 			Inverse: false,
 			Table:   user.BookmarkTable,
-			Columns: user.BookmarkPrimaryKey,
+			Columns: []string{user.BookmarkColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
@@ -230,10 +193,10 @@ func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if nodes := uu.mutation.RemovedBookmarkIDs(); len(nodes) > 0 && !uu.mutation.BookmarkCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.O2M,
 			Inverse: false,
 			Table:   user.BookmarkTable,
-			Columns: user.BookmarkPrimaryKey,
+			Columns: []string{user.BookmarkColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
@@ -249,69 +212,15 @@ func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if nodes := uu.mutation.BookmarkIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.O2M,
 			Inverse: false,
 			Table:   user.BookmarkTable,
-			Columns: user.BookmarkPrimaryKey,
+			Columns: []string{user.BookmarkColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
 					Type:   field.TypeInt,
 					Column: bookmark.FieldID,
-				},
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
-	if uu.mutation.TagCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: true,
-			Table:   user.TagTable,
-			Columns: user.TagPrimaryKey,
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: tag.FieldID,
-				},
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := uu.mutation.RemovedTagIDs(); len(nodes) > 0 && !uu.mutation.TagCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: true,
-			Table:   user.TagTable,
-			Columns: user.TagPrimaryKey,
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: tag.FieldID,
-				},
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := uu.mutation.TagIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: true,
-			Table:   user.TagTable,
-			Columns: user.TagPrimaryKey,
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: tag.FieldID,
 				},
 			},
 		}
@@ -366,21 +275,6 @@ func (uuo *UserUpdateOne) AddBookmark(b ...*Bookmark) *UserUpdateOne {
 	return uuo.AddBookmarkIDs(ids...)
 }
 
-// AddTagIDs adds the "tag" edge to the Tag entity by IDs.
-func (uuo *UserUpdateOne) AddTagIDs(ids ...int) *UserUpdateOne {
-	uuo.mutation.AddTagIDs(ids...)
-	return uuo
-}
-
-// AddTag adds the "tag" edges to the Tag entity.
-func (uuo *UserUpdateOne) AddTag(t ...*Tag) *UserUpdateOne {
-	ids := make([]int, len(t))
-	for i := range t {
-		ids[i] = t[i].ID
-	}
-	return uuo.AddTagIDs(ids...)
-}
-
 // Mutation returns the UserMutation object of the builder.
 func (uuo *UserUpdateOne) Mutation() *UserMutation {
 	return uuo.mutation
@@ -405,27 +299,6 @@ func (uuo *UserUpdateOne) RemoveBookmark(b ...*Bookmark) *UserUpdateOne {
 		ids[i] = b[i].ID
 	}
 	return uuo.RemoveBookmarkIDs(ids...)
-}
-
-// ClearTag clears all "tag" edges to the Tag entity.
-func (uuo *UserUpdateOne) ClearTag() *UserUpdateOne {
-	uuo.mutation.ClearTag()
-	return uuo
-}
-
-// RemoveTagIDs removes the "tag" edge to Tag entities by IDs.
-func (uuo *UserUpdateOne) RemoveTagIDs(ids ...int) *UserUpdateOne {
-	uuo.mutation.RemoveTagIDs(ids...)
-	return uuo
-}
-
-// RemoveTag removes "tag" edges to Tag entities.
-func (uuo *UserUpdateOne) RemoveTag(t ...*Tag) *UserUpdateOne {
-	ids := make([]int, len(t))
-	for i := range t {
-		ids[i] = t[i].ID
-	}
-	return uuo.RemoveTagIDs(ids...)
 }
 
 // Select allows selecting one or more fields (columns) of the returned entity.
@@ -554,10 +427,10 @@ func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) 
 	}
 	if uuo.mutation.BookmarkCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.O2M,
 			Inverse: false,
 			Table:   user.BookmarkTable,
-			Columns: user.BookmarkPrimaryKey,
+			Columns: []string{user.BookmarkColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
@@ -570,10 +443,10 @@ func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) 
 	}
 	if nodes := uuo.mutation.RemovedBookmarkIDs(); len(nodes) > 0 && !uuo.mutation.BookmarkCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.O2M,
 			Inverse: false,
 			Table:   user.BookmarkTable,
-			Columns: user.BookmarkPrimaryKey,
+			Columns: []string{user.BookmarkColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
@@ -589,69 +462,15 @@ func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) 
 	}
 	if nodes := uuo.mutation.BookmarkIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.O2M,
 			Inverse: false,
 			Table:   user.BookmarkTable,
-			Columns: user.BookmarkPrimaryKey,
+			Columns: []string{user.BookmarkColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
 					Type:   field.TypeInt,
 					Column: bookmark.FieldID,
-				},
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
-	if uuo.mutation.TagCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: true,
-			Table:   user.TagTable,
-			Columns: user.TagPrimaryKey,
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: tag.FieldID,
-				},
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := uuo.mutation.RemovedTagIDs(); len(nodes) > 0 && !uuo.mutation.TagCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: true,
-			Table:   user.TagTable,
-			Columns: user.TagPrimaryKey,
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: tag.FieldID,
-				},
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := uuo.mutation.TagIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: true,
-			Table:   user.TagTable,
-			Columns: user.TagPrimaryKey,
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: tag.FieldID,
 				},
 			},
 		}

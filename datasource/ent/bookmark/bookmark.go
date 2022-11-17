@@ -7,6 +7,10 @@ const (
 	Label = "bookmark"
 	// FieldID holds the string denoting the id field in the database.
 	FieldID = "id"
+	// FieldUserID holds the string denoting the user_id field in the database.
+	FieldUserID = "user_id"
+	// FieldSiteID holds the string denoting the site_id field in the database.
+	FieldSiteID = "site_id"
 	// FieldTitle holds the string denoting the title field in the database.
 	FieldTitle = "title"
 	// FieldNote holds the string denoting the note field in the database.
@@ -15,45 +19,32 @@ const (
 	EdgeSite = "site"
 	// EdgeUser holds the string denoting the user edge name in mutations.
 	EdgeUser = "user"
-	// EdgeTag holds the string denoting the tag edge name in mutations.
-	EdgeTag = "tag"
 	// Table holds the table name of the bookmark in the database.
 	Table = "bookmarks"
-	// SiteTable is the table that holds the site relation/edge. The primary key declared below.
-	SiteTable = "site_bookmark"
+	// SiteTable is the table that holds the site relation/edge.
+	SiteTable = "bookmarks"
 	// SiteInverseTable is the table name for the Site entity.
 	// It exists in this package in order to avoid circular dependency with the "site" package.
 	SiteInverseTable = "sites"
-	// UserTable is the table that holds the user relation/edge. The primary key declared below.
-	UserTable = "user_bookmark"
+	// SiteColumn is the table column denoting the site relation/edge.
+	SiteColumn = "site_id"
+	// UserTable is the table that holds the user relation/edge.
+	UserTable = "bookmarks"
 	// UserInverseTable is the table name for the User entity.
 	// It exists in this package in order to avoid circular dependency with the "user" package.
 	UserInverseTable = "users"
-	// TagTable is the table that holds the tag relation/edge. The primary key declared below.
-	TagTable = "bookmark_tag"
-	// TagInverseTable is the table name for the Tag entity.
-	// It exists in this package in order to avoid circular dependency with the "tag" package.
-	TagInverseTable = "tags"
+	// UserColumn is the table column denoting the user relation/edge.
+	UserColumn = "user_id"
 )
 
 // Columns holds all SQL columns for bookmark fields.
 var Columns = []string{
 	FieldID,
+	FieldUserID,
+	FieldSiteID,
 	FieldTitle,
 	FieldNote,
 }
-
-var (
-	// SitePrimaryKey and SiteColumn2 are the table columns denoting the
-	// primary key for the site relation (M2M).
-	SitePrimaryKey = []string{"site_id", "bookmark_id"}
-	// UserPrimaryKey and UserColumn2 are the table columns denoting the
-	// primary key for the user relation (M2M).
-	UserPrimaryKey = []string{"user_id", "bookmark_id"}
-	// TagPrimaryKey and TagColumn2 are the table columns denoting the
-	// primary key for the tag relation (M2M).
-	TagPrimaryKey = []string{"bookmark_id", "tag_id"}
-)
 
 // ValidColumn reports if the column name is valid (part of the table columns).
 func ValidColumn(column string) bool {

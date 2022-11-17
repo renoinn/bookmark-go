@@ -297,7 +297,7 @@ func HasBookmark() predicate.User {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
 			sqlgraph.To(BookmarkTable, FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, false, BookmarkTable, BookmarkPrimaryKey...),
+			sqlgraph.Edge(sqlgraph.O2M, false, BookmarkTable, BookmarkColumn),
 		)
 		sqlgraph.HasNeighbors(s, step)
 	})
@@ -309,35 +309,7 @@ func HasBookmarkWith(preds ...predicate.Bookmark) predicate.User {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
 			sqlgraph.To(BookmarkInverseTable, FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, false, BookmarkTable, BookmarkPrimaryKey...),
-		)
-		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
-			for _, p := range preds {
-				p(s)
-			}
-		})
-	})
-}
-
-// HasTag applies the HasEdge predicate on the "tag" edge.
-func HasTag() predicate.User {
-	return predicate.User(func(s *sql.Selector) {
-		step := sqlgraph.NewStep(
-			sqlgraph.From(Table, FieldID),
-			sqlgraph.To(TagTable, FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, true, TagTable, TagPrimaryKey...),
-		)
-		sqlgraph.HasNeighbors(s, step)
-	})
-}
-
-// HasTagWith applies the HasEdge predicate on the "tag" edge with a given conditions (other predicates).
-func HasTagWith(preds ...predicate.Tag) predicate.User {
-	return predicate.User(func(s *sql.Selector) {
-		step := sqlgraph.NewStep(
-			sqlgraph.From(Table, FieldID),
-			sqlgraph.To(TagInverseTable, FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, true, TagTable, TagPrimaryKey...),
+			sqlgraph.Edge(sqlgraph.O2M, false, BookmarkTable, BookmarkColumn),
 		)
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {

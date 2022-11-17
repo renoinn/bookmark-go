@@ -34,7 +34,5 @@ func (User) Fields() []ent.Field {
 func (User) Edges() []ent.Edge {
 	return []ent.Edge{
 		edge.To("bookmark", Bookmark.Type),
-		edge.From("tag", Tag.Type).
-			Ref("user"),
 	}
 }

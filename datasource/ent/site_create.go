@@ -176,10 +176,10 @@ func (sc *SiteCreate) createSpec() (*Site, *sqlgraph.CreateSpec) {
 	}
 	if nodes := sc.mutation.BookmarkIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.O2M,
 			Inverse: false,
 			Table:   site.BookmarkTable,
-			Columns: site.BookmarkPrimaryKey,
+			Columns: []string{site.BookmarkColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{

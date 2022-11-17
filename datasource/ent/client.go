@@ -237,7 +237,7 @@ func (c *BookmarkClient) QuerySite(b *Bookmark) *SiteQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(bookmark.Table, bookmark.FieldID, id),
 			sqlgraph.To(site.Table, site.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, true, bookmark.SiteTable, bookmark.SitePrimaryKey...),
+			sqlgraph.Edge(sqlgraph.M2O, true, bookmark.SiteTable, bookmark.SiteColumn),
 		)
 		fromV = sqlgraph.Neighbors(b.driver.Dialect(), step)
 		return fromV, nil
@@ -253,23 +253,7 @@ func (c *BookmarkClient) QueryUser(b *Bookmark) *UserQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(bookmark.Table, bookmark.FieldID, id),
 			sqlgraph.To(user.Table, user.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, true, bookmark.UserTable, bookmark.UserPrimaryKey...),
-		)
-		fromV = sqlgraph.Neighbors(b.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
-// QueryTag queries the tag edge of a Bookmark.
-func (c *BookmarkClient) QueryTag(b *Bookmark) *TagQuery {
-	query := &TagQuery{config: c.config}
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := b.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(bookmark.Table, bookmark.FieldID, id),
-			sqlgraph.To(tag.Table, tag.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, false, bookmark.TagTable, bookmark.TagPrimaryKey...),
+			sqlgraph.Edge(sqlgraph.M2O, true, bookmark.UserTable, bookmark.UserColumn),
 		)
 		fromV = sqlgraph.Neighbors(b.driver.Dialect(), step)
 		return fromV, nil
@@ -375,7 +359,7 @@ func (c *SiteClient) QueryBookmark(s *Site) *BookmarkQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(site.Table, site.FieldID, id),
 			sqlgraph.To(bookmark.Table, bookmark.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, false, site.BookmarkTable, site.BookmarkPrimaryKey...),
+			sqlgraph.Edge(sqlgraph.O2M, false, site.BookmarkTable, site.BookmarkColumn),
 		)
 		fromV = sqlgraph.Neighbors(s.driver.Dialect(), step)
 		return fromV, nil
@@ -471,38 +455,6 @@ func (c *TagClient) GetX(ctx context.Context, id int) *Tag {
 		panic(err)
 	}
 	return obj
-}
-
-// QueryBookmark queries the bookmark edge of a Tag.
-func (c *TagClient) QueryBookmark(t *Tag) *BookmarkQuery {
-	query := &BookmarkQuery{config: c.config}
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := t.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(tag.Table, tag.FieldID, id),
-			sqlgraph.To(bookmark.Table, bookmark.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, true, tag.BookmarkTable, tag.BookmarkPrimaryKey...),
-		)
-		fromV = sqlgraph.Neighbors(t.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
-// QueryUser queries the user edge of a Tag.
-func (c *TagClient) QueryUser(t *Tag) *UserQuery {
-	query := &UserQuery{config: c.config}
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := t.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(tag.Table, tag.FieldID, id),
-			sqlgraph.To(user.Table, user.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, false, tag.UserTable, tag.UserPrimaryKey...),
-		)
-		fromV = sqlgraph.Neighbors(t.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
 }
 
 // Hooks returns the client hooks.
@@ -603,23 +555,7 @@ func (c *UserClient) QueryBookmark(u *User) *BookmarkQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(user.Table, user.FieldID, id),
 			sqlgraph.To(bookmark.Table, bookmark.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, false, user.BookmarkTable, user.BookmarkPrimaryKey...),
-		)
-		fromV = sqlgraph.Neighbors(u.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
-// QueryTag queries the tag edge of a User.
-func (c *UserClient) QueryTag(u *User) *TagQuery {
-	query := &TagQuery{config: c.config}
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := u.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(user.Table, user.FieldID, id),
-			sqlgraph.To(tag.Table, tag.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, true, user.TagTable, user.TagPrimaryKey...),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.BookmarkTable, user.BookmarkColumn),
 		)
 		fromV = sqlgraph.Neighbors(u.driver.Dialect(), step)
 		return fromV, nil

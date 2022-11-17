@@ -4,30 +4,25 @@ package ent
 
 import (
 	"context"
-	"database/sql/driver"
 	"fmt"
 	"math"
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/renoinn/bookmark-go/datasource/ent/bookmark"
 	"github.com/renoinn/bookmark-go/datasource/ent/predicate"
 	"github.com/renoinn/bookmark-go/datasource/ent/tag"
-	"github.com/renoinn/bookmark-go/datasource/ent/user"
 )
 
 // TagQuery is the builder for querying Tag entities.
 type TagQuery struct {
 	config
-	limit        *int
-	offset       *int
-	unique       *bool
-	order        []OrderFunc
-	fields       []string
-	predicates   []predicate.Tag
-	withBookmark *BookmarkQuery
-	withUser     *UserQuery
+	limit      *int
+	offset     *int
+	unique     *bool
+	order      []OrderFunc
+	fields     []string
+	predicates []predicate.Tag
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -62,50 +57,6 @@ func (tq *TagQuery) Unique(unique bool) *TagQuery {
 func (tq *TagQuery) Order(o ...OrderFunc) *TagQuery {
 	tq.order = append(tq.order, o...)
 	return tq
-}
-
-// QueryBookmark chains the current query on the "bookmark" edge.
-func (tq *TagQuery) QueryBookmark() *BookmarkQuery {
-	query := &BookmarkQuery{config: tq.config}
-	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
-		if err := tq.prepareQuery(ctx); err != nil {
-			return nil, err
-		}
-		selector := tq.sqlQuery(ctx)
-		if err := selector.Err(); err != nil {
-			return nil, err
-		}
-		step := sqlgraph.NewStep(
-			sqlgraph.From(tag.Table, tag.FieldID, selector),
-			sqlgraph.To(bookmark.Table, bookmark.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, true, tag.BookmarkTable, tag.BookmarkPrimaryKey...),
-		)
-		fromU = sqlgraph.SetNeighbors(tq.driver.Dialect(), step)
-		return fromU, nil
-	}
-	return query
-}
-
-// QueryUser chains the current query on the "user" edge.
-func (tq *TagQuery) QueryUser() *UserQuery {
-	query := &UserQuery{config: tq.config}
-	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
-		if err := tq.prepareQuery(ctx); err != nil {
-			return nil, err
-		}
-		selector := tq.sqlQuery(ctx)
-		if err := selector.Err(); err != nil {
-			return nil, err
-		}
-		step := sqlgraph.NewStep(
-			sqlgraph.From(tag.Table, tag.FieldID, selector),
-			sqlgraph.To(user.Table, user.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, false, tag.UserTable, tag.UserPrimaryKey...),
-		)
-		fromU = sqlgraph.SetNeighbors(tq.driver.Dialect(), step)
-		return fromU, nil
-	}
-	return query
 }
 
 // First returns the first Tag entity from the query.
@@ -284,40 +235,16 @@ func (tq *TagQuery) Clone() *TagQuery {
 		return nil
 	}
 	return &TagQuery{
-		config:       tq.config,
-		limit:        tq.limit,
-		offset:       tq.offset,
-		order:        append([]OrderFunc{}, tq.order...),
-		predicates:   append([]predicate.Tag{}, tq.predicates...),
-		withBookmark: tq.withBookmark.Clone(),
-		withUser:     tq.withUser.Clone(),
+		config:     tq.config,
+		limit:      tq.limit,
+		offset:     tq.offset,
+		order:      append([]OrderFunc{}, tq.order...),
+		predicates: append([]predicate.Tag{}, tq.predicates...),
 		// clone intermediate query.
 		sql:    tq.sql.Clone(),
 		path:   tq.path,
 		unique: tq.unique,
 	}
-}
-
-// WithBookmark tells the query-builder to eager-load the nodes that are connected to
-// the "bookmark" edge. The optional arguments are used to configure the query builder of the edge.
-func (tq *TagQuery) WithBookmark(opts ...func(*BookmarkQuery)) *TagQuery {
-	query := &BookmarkQuery{config: tq.config}
-	for _, opt := range opts {
-		opt(query)
-	}
-	tq.withBookmark = query
-	return tq
-}
-
-// WithUser tells the query-builder to eager-load the nodes that are connected to
-// the "user" edge. The optional arguments are used to configure the query builder of the edge.
-func (tq *TagQuery) WithUser(opts ...func(*UserQuery)) *TagQuery {
-	query := &UserQuery{config: tq.config}
-	for _, opt := range opts {
-		opt(query)
-	}
-	tq.withUser = query
-	return tq
 }
 
 // GroupBy is used to group vertices by one or more fields/columns.
@@ -391,12 +318,8 @@ func (tq *TagQuery) prepareQuery(ctx context.Context) error {
 
 func (tq *TagQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Tag, error) {
 	var (
-		nodes       = []*Tag{}
-		_spec       = tq.querySpec()
-		loadedTypes = [2]bool{
-			tq.withBookmark != nil,
-			tq.withUser != nil,
-		}
+		nodes = []*Tag{}
+		_spec = tq.querySpec()
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
 		return (*Tag).scanValues(nil, columns)
@@ -404,7 +327,6 @@ func (tq *TagQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Tag, err
 	_spec.Assign = func(columns []string, values []any) error {
 		node := &Tag{config: tq.config}
 		nodes = append(nodes, node)
-		node.Edges.loadedTypes = loadedTypes
 		return node.assignValues(columns, values)
 	}
 	for i := range hooks {
@@ -416,138 +338,7 @@ func (tq *TagQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Tag, err
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
-	if query := tq.withBookmark; query != nil {
-		if err := tq.loadBookmark(ctx, query, nodes,
-			func(n *Tag) { n.Edges.Bookmark = []*Bookmark{} },
-			func(n *Tag, e *Bookmark) { n.Edges.Bookmark = append(n.Edges.Bookmark, e) }); err != nil {
-			return nil, err
-		}
-	}
-	if query := tq.withUser; query != nil {
-		if err := tq.loadUser(ctx, query, nodes,
-			func(n *Tag) { n.Edges.User = []*User{} },
-			func(n *Tag, e *User) { n.Edges.User = append(n.Edges.User, e) }); err != nil {
-			return nil, err
-		}
-	}
 	return nodes, nil
-}
-
-func (tq *TagQuery) loadBookmark(ctx context.Context, query *BookmarkQuery, nodes []*Tag, init func(*Tag), assign func(*Tag, *Bookmark)) error {
-	edgeIDs := make([]driver.Value, len(nodes))
-	byID := make(map[int]*Tag)
-	nids := make(map[int]map[*Tag]struct{})
-	for i, node := range nodes {
-		edgeIDs[i] = node.ID
-		byID[node.ID] = node
-		if init != nil {
-			init(node)
-		}
-	}
-	query.Where(func(s *sql.Selector) {
-		joinT := sql.Table(tag.BookmarkTable)
-		s.Join(joinT).On(s.C(bookmark.FieldID), joinT.C(tag.BookmarkPrimaryKey[0]))
-		s.Where(sql.InValues(joinT.C(tag.BookmarkPrimaryKey[1]), edgeIDs...))
-		columns := s.SelectedColumns()
-		s.Select(joinT.C(tag.BookmarkPrimaryKey[1]))
-		s.AppendSelect(columns...)
-		s.SetDistinct(false)
-	})
-	if err := query.prepareQuery(ctx); err != nil {
-		return err
-	}
-	neighbors, err := query.sqlAll(ctx, func(_ context.Context, spec *sqlgraph.QuerySpec) {
-		assign := spec.Assign
-		values := spec.ScanValues
-		spec.ScanValues = func(columns []string) ([]any, error) {
-			values, err := values(columns[1:])
-			if err != nil {
-				return nil, err
-			}
-			return append([]any{new(sql.NullInt64)}, values...), nil
-		}
-		spec.Assign = func(columns []string, values []any) error {
-			outValue := int(values[0].(*sql.NullInt64).Int64)
-			inValue := int(values[1].(*sql.NullInt64).Int64)
-			if nids[inValue] == nil {
-				nids[inValue] = map[*Tag]struct{}{byID[outValue]: {}}
-				return assign(columns[1:], values[1:])
-			}
-			nids[inValue][byID[outValue]] = struct{}{}
-			return nil
-		}
-	})
-	if err != nil {
-		return err
-	}
-	for _, n := range neighbors {
-		nodes, ok := nids[n.ID]
-		if !ok {
-			return fmt.Errorf(`unexpected "bookmark" node returned %v`, n.ID)
-		}
-		for kn := range nodes {
-			assign(kn, n)
-		}
-	}
-	return nil
-}
-func (tq *TagQuery) loadUser(ctx context.Context, query *UserQuery, nodes []*Tag, init func(*Tag), assign func(*Tag, *User)) error {
-	edgeIDs := make([]driver.Value, len(nodes))
-	byID := make(map[int]*Tag)
-	nids := make(map[int]map[*Tag]struct{})
-	for i, node := range nodes {
-		edgeIDs[i] = node.ID
-		byID[node.ID] = node
-		if init != nil {
-			init(node)
-		}
-	}
-	query.Where(func(s *sql.Selector) {
-		joinT := sql.Table(tag.UserTable)
-		s.Join(joinT).On(s.C(user.FieldID), joinT.C(tag.UserPrimaryKey[1]))
-		s.Where(sql.InValues(joinT.C(tag.UserPrimaryKey[0]), edgeIDs...))
-		columns := s.SelectedColumns()
-		s.Select(joinT.C(tag.UserPrimaryKey[0]))
-		s.AppendSelect(columns...)
-		s.SetDistinct(false)
-	})
-	if err := query.prepareQuery(ctx); err != nil {
-		return err
-	}
-	neighbors, err := query.sqlAll(ctx, func(_ context.Context, spec *sqlgraph.QuerySpec) {
-		assign := spec.Assign
-		values := spec.ScanValues
-		spec.ScanValues = func(columns []string) ([]any, error) {
-			values, err := values(columns[1:])
-			if err != nil {
-				return nil, err
-			}
-			return append([]any{new(sql.NullInt64)}, values...), nil
-		}
-		spec.Assign = func(columns []string, values []any) error {
-			outValue := int(values[0].(*sql.NullInt64).Int64)
-			inValue := int(values[1].(*sql.NullInt64).Int64)
-			if nids[inValue] == nil {
-				nids[inValue] = map[*Tag]struct{}{byID[outValue]: {}}
-				return assign(columns[1:], values[1:])
-			}
-			nids[inValue][byID[outValue]] = struct{}{}
-			return nil
-		}
-	})
-	if err != nil {
-		return err
-	}
-	for _, n := range neighbors {
-		nodes, ok := nids[n.ID]
-		if !ok {
-			return fmt.Errorf(`unexpected "user" node returned %v`, n.ID)
-		}
-		for kn := range nodes {
-			assign(kn, n)
-		}
-	}
-	return nil
 }
 
 func (tq *TagQuery) sqlCount(ctx context.Context) (int, error) {

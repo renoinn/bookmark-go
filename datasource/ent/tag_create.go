@@ -9,9 +9,7 @@ import (
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/renoinn/bookmark-go/datasource/ent/bookmark"
 	"github.com/renoinn/bookmark-go/datasource/ent/tag"
-	"github.com/renoinn/bookmark-go/datasource/ent/user"
 )
 
 // TagCreate is the builder for creating a Tag entity.
@@ -39,36 +37,6 @@ func (tc *TagCreate) SetNillableCount(i *int) *TagCreate {
 		tc.SetCount(*i)
 	}
 	return tc
-}
-
-// AddBookmarkIDs adds the "bookmark" edge to the Bookmark entity by IDs.
-func (tc *TagCreate) AddBookmarkIDs(ids ...int) *TagCreate {
-	tc.mutation.AddBookmarkIDs(ids...)
-	return tc
-}
-
-// AddBookmark adds the "bookmark" edges to the Bookmark entity.
-func (tc *TagCreate) AddBookmark(b ...*Bookmark) *TagCreate {
-	ids := make([]int, len(b))
-	for i := range b {
-		ids[i] = b[i].ID
-	}
-	return tc.AddBookmarkIDs(ids...)
-}
-
-// AddUserIDs adds the "user" edge to the User entity by IDs.
-func (tc *TagCreate) AddUserIDs(ids ...int) *TagCreate {
-	tc.mutation.AddUserIDs(ids...)
-	return tc
-}
-
-// AddUser adds the "user" edges to the User entity.
-func (tc *TagCreate) AddUser(u ...*User) *TagCreate {
-	ids := make([]int, len(u))
-	for i := range u {
-		ids[i] = u[i].ID
-	}
-	return tc.AddUserIDs(ids...)
 }
 
 // Mutation returns the TagMutation object of the builder.
@@ -201,44 +169,6 @@ func (tc *TagCreate) createSpec() (*Tag, *sqlgraph.CreateSpec) {
 	if value, ok := tc.mutation.Count(); ok {
 		_spec.SetField(tag.FieldCount, field.TypeInt, value)
 		_node.Count = value
-	}
-	if nodes := tc.mutation.BookmarkIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: true,
-			Table:   tag.BookmarkTable,
-			Columns: tag.BookmarkPrimaryKey,
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: bookmark.FieldID,
-				},
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges = append(_spec.Edges, edge)
-	}
-	if nodes := tc.mutation.UserIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: false,
-			Table:   tag.UserTable,
-			Columns: tag.UserPrimaryKey,
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: user.FieldID,
-				},
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec
 }

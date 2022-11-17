@@ -4,7 +4,6 @@ package tag
 
 import (
 	"entgo.io/ent/dialect/sql"
-	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/renoinn/bookmark-go/datasource/ent/predicate"
 )
 
@@ -253,62 +252,6 @@ func CountLT(v int) predicate.Tag {
 func CountLTE(v int) predicate.Tag {
 	return predicate.Tag(func(s *sql.Selector) {
 		s.Where(sql.LTE(s.C(FieldCount), v))
-	})
-}
-
-// HasBookmark applies the HasEdge predicate on the "bookmark" edge.
-func HasBookmark() predicate.Tag {
-	return predicate.Tag(func(s *sql.Selector) {
-		step := sqlgraph.NewStep(
-			sqlgraph.From(Table, FieldID),
-			sqlgraph.To(BookmarkTable, FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, true, BookmarkTable, BookmarkPrimaryKey...),
-		)
-		sqlgraph.HasNeighbors(s, step)
-	})
-}
-
-// HasBookmarkWith applies the HasEdge predicate on the "bookmark" edge with a given conditions (other predicates).
-func HasBookmarkWith(preds ...predicate.Bookmark) predicate.Tag {
-	return predicate.Tag(func(s *sql.Selector) {
-		step := sqlgraph.NewStep(
-			sqlgraph.From(Table, FieldID),
-			sqlgraph.To(BookmarkInverseTable, FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, true, BookmarkTable, BookmarkPrimaryKey...),
-		)
-		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
-			for _, p := range preds {
-				p(s)
-			}
-		})
-	})
-}
-
-// HasUser applies the HasEdge predicate on the "user" edge.
-func HasUser() predicate.Tag {
-	return predicate.Tag(func(s *sql.Selector) {
-		step := sqlgraph.NewStep(
-			sqlgraph.From(Table, FieldID),
-			sqlgraph.To(UserTable, FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, false, UserTable, UserPrimaryKey...),
-		)
-		sqlgraph.HasNeighbors(s, step)
-	})
-}
-
-// HasUserWith applies the HasEdge predicate on the "user" edge with a given conditions (other predicates).
-func HasUserWith(preds ...predicate.User) predicate.Tag {
-	return predicate.Tag(func(s *sql.Selector) {
-		step := sqlgraph.NewStep(
-			sqlgraph.From(Table, FieldID),
-			sqlgraph.To(UserInverseTable, FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, false, UserTable, UserPrimaryKey...),
-		)
-		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
-			for _, p := range preds {
-				p(s)
-			}
-		})
 	})
 }
 

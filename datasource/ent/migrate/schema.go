@@ -14,12 +14,28 @@ var (
 		{Name: "id", Type: field.TypeInt, Increment: true},
 		{Name: "title", Type: field.TypeString},
 		{Name: "note", Type: field.TypeString, Size: 1000},
+		{Name: "site_id", Type: field.TypeInt},
+		{Name: "user_id", Type: field.TypeInt},
 	}
 	// BookmarksTable holds the schema information for the "bookmarks" table.
 	BookmarksTable = &schema.Table{
 		Name:       "bookmarks",
 		Columns:    BookmarksColumns,
 		PrimaryKey: []*schema.Column{BookmarksColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "bookmarks_sites_bookmark",
+				Columns:    []*schema.Column{BookmarksColumns[3]},
+				RefColumns: []*schema.Column{SitesColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+			{
+				Symbol:     "bookmarks_users_bookmark",
+				Columns:    []*schema.Column{BookmarksColumns[4]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
 	}
 	// SitesColumns holds the columns for the "sites" table.
 	SitesColumns = []*schema.Column{
@@ -57,129 +73,19 @@ var (
 		Columns:    UsersColumns,
 		PrimaryKey: []*schema.Column{UsersColumns[0]},
 	}
-	// BookmarkTagColumns holds the columns for the "bookmark_tag" table.
-	BookmarkTagColumns = []*schema.Column{
-		{Name: "bookmark_id", Type: field.TypeInt},
-		{Name: "tag_id", Type: field.TypeInt},
-	}
-	// BookmarkTagTable holds the schema information for the "bookmark_tag" table.
-	BookmarkTagTable = &schema.Table{
-		Name:       "bookmark_tag",
-		Columns:    BookmarkTagColumns,
-		PrimaryKey: []*schema.Column{BookmarkTagColumns[0], BookmarkTagColumns[1]},
-		ForeignKeys: []*schema.ForeignKey{
-			{
-				Symbol:     "bookmark_tag_bookmark_id",
-				Columns:    []*schema.Column{BookmarkTagColumns[0]},
-				RefColumns: []*schema.Column{BookmarksColumns[0]},
-				OnDelete:   schema.Cascade,
-			},
-			{
-				Symbol:     "bookmark_tag_tag_id",
-				Columns:    []*schema.Column{BookmarkTagColumns[1]},
-				RefColumns: []*schema.Column{TagsColumns[0]},
-				OnDelete:   schema.Cascade,
-			},
-		},
-	}
-	// SiteBookmarkColumns holds the columns for the "site_bookmark" table.
-	SiteBookmarkColumns = []*schema.Column{
-		{Name: "site_id", Type: field.TypeInt},
-		{Name: "bookmark_id", Type: field.TypeInt},
-	}
-	// SiteBookmarkTable holds the schema information for the "site_bookmark" table.
-	SiteBookmarkTable = &schema.Table{
-		Name:       "site_bookmark",
-		Columns:    SiteBookmarkColumns,
-		PrimaryKey: []*schema.Column{SiteBookmarkColumns[0], SiteBookmarkColumns[1]},
-		ForeignKeys: []*schema.ForeignKey{
-			{
-				Symbol:     "site_bookmark_site_id",
-				Columns:    []*schema.Column{SiteBookmarkColumns[0]},
-				RefColumns: []*schema.Column{SitesColumns[0]},
-				OnDelete:   schema.Cascade,
-			},
-			{
-				Symbol:     "site_bookmark_bookmark_id",
-				Columns:    []*schema.Column{SiteBookmarkColumns[1]},
-				RefColumns: []*schema.Column{BookmarksColumns[0]},
-				OnDelete:   schema.Cascade,
-			},
-		},
-	}
-	// TagUserColumns holds the columns for the "tag_user" table.
-	TagUserColumns = []*schema.Column{
-		{Name: "tag_id", Type: field.TypeInt},
-		{Name: "user_id", Type: field.TypeInt},
-	}
-	// TagUserTable holds the schema information for the "tag_user" table.
-	TagUserTable = &schema.Table{
-		Name:       "tag_user",
-		Columns:    TagUserColumns,
-		PrimaryKey: []*schema.Column{TagUserColumns[0], TagUserColumns[1]},
-		ForeignKeys: []*schema.ForeignKey{
-			{
-				Symbol:     "tag_user_tag_id",
-				Columns:    []*schema.Column{TagUserColumns[0]},
-				RefColumns: []*schema.Column{TagsColumns[0]},
-				OnDelete:   schema.Cascade,
-			},
-			{
-				Symbol:     "tag_user_user_id",
-				Columns:    []*schema.Column{TagUserColumns[1]},
-				RefColumns: []*schema.Column{UsersColumns[0]},
-				OnDelete:   schema.Cascade,
-			},
-		},
-	}
-	// UserBookmarkColumns holds the columns for the "user_bookmark" table.
-	UserBookmarkColumns = []*schema.Column{
-		{Name: "user_id", Type: field.TypeInt},
-		{Name: "bookmark_id", Type: field.TypeInt},
-	}
-	// UserBookmarkTable holds the schema information for the "user_bookmark" table.
-	UserBookmarkTable = &schema.Table{
-		Name:       "user_bookmark",
-		Columns:    UserBookmarkColumns,
-		PrimaryKey: []*schema.Column{UserBookmarkColumns[0], UserBookmarkColumns[1]},
-		ForeignKeys: []*schema.ForeignKey{
-			{
-				Symbol:     "user_bookmark_user_id",
-				Columns:    []*schema.Column{UserBookmarkColumns[0]},
-				RefColumns: []*schema.Column{UsersColumns[0]},
-				OnDelete:   schema.Cascade,
-			},
-			{
-				Symbol:     "user_bookmark_bookmark_id",
-				Columns:    []*schema.Column{UserBookmarkColumns[1]},
-				RefColumns: []*schema.Column{BookmarksColumns[0]},
-				OnDelete:   schema.Cascade,
-			},
-		},
-	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
 		BookmarksTable,
 		SitesTable,
 		TagsTable,
 		UsersTable,
-		BookmarkTagTable,
-		SiteBookmarkTable,
-		TagUserTable,
-		UserBookmarkTable,
 	}
 )
 
 func init() {
+	BookmarksTable.ForeignKeys[0].RefTable = SitesTable
+	BookmarksTable.ForeignKeys[1].RefTable = UsersTable
 	UsersTable.Annotation = &entsql.Annotation{
 		Table: "users",
 	}
-	BookmarkTagTable.ForeignKeys[0].RefTable = BookmarksTable
-	BookmarkTagTable.ForeignKeys[1].RefTable = TagsTable
-	SiteBookmarkTable.ForeignKeys[0].RefTable = SitesTable
-	SiteBookmarkTable.ForeignKeys[1].RefTable = BookmarksTable
-	TagUserTable.ForeignKeys[0].RefTable = TagsTable
-	TagUserTable.ForeignKeys[1].RefTable = UsersTable
-	UserBookmarkTable.ForeignKeys[0].RefTable = UsersTable
-	UserBookmarkTable.ForeignKeys[1].RefTable = BookmarksTable
 }

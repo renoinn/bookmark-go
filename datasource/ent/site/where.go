@@ -297,7 +297,7 @@ func HasBookmark() predicate.Site {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
 			sqlgraph.To(BookmarkTable, FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, false, BookmarkTable, BookmarkPrimaryKey...),
+			sqlgraph.Edge(sqlgraph.O2M, false, BookmarkTable, BookmarkColumn),
 		)
 		sqlgraph.HasNeighbors(s, step)
 	})
@@ -309,7 +309,7 @@ func HasBookmarkWith(preds ...predicate.Bookmark) predicate.Site {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
 			sqlgraph.To(BookmarkInverseTable, FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, false, BookmarkTable, BookmarkPrimaryKey...),
+			sqlgraph.Edge(sqlgraph.O2M, false, BookmarkTable, BookmarkColumn),
 		)
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {

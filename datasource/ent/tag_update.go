@@ -10,10 +10,8 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/renoinn/bookmark-go/datasource/ent/bookmark"
 	"github.com/renoinn/bookmark-go/datasource/ent/predicate"
 	"github.com/renoinn/bookmark-go/datasource/ent/tag"
-	"github.com/renoinn/bookmark-go/datasource/ent/user"
 )
 
 // TagUpdate is the builder for updating Tag entities.
@@ -56,81 +54,9 @@ func (tu *TagUpdate) AddCount(i int) *TagUpdate {
 	return tu
 }
 
-// AddBookmarkIDs adds the "bookmark" edge to the Bookmark entity by IDs.
-func (tu *TagUpdate) AddBookmarkIDs(ids ...int) *TagUpdate {
-	tu.mutation.AddBookmarkIDs(ids...)
-	return tu
-}
-
-// AddBookmark adds the "bookmark" edges to the Bookmark entity.
-func (tu *TagUpdate) AddBookmark(b ...*Bookmark) *TagUpdate {
-	ids := make([]int, len(b))
-	for i := range b {
-		ids[i] = b[i].ID
-	}
-	return tu.AddBookmarkIDs(ids...)
-}
-
-// AddUserIDs adds the "user" edge to the User entity by IDs.
-func (tu *TagUpdate) AddUserIDs(ids ...int) *TagUpdate {
-	tu.mutation.AddUserIDs(ids...)
-	return tu
-}
-
-// AddUser adds the "user" edges to the User entity.
-func (tu *TagUpdate) AddUser(u ...*User) *TagUpdate {
-	ids := make([]int, len(u))
-	for i := range u {
-		ids[i] = u[i].ID
-	}
-	return tu.AddUserIDs(ids...)
-}
-
 // Mutation returns the TagMutation object of the builder.
 func (tu *TagUpdate) Mutation() *TagMutation {
 	return tu.mutation
-}
-
-// ClearBookmark clears all "bookmark" edges to the Bookmark entity.
-func (tu *TagUpdate) ClearBookmark() *TagUpdate {
-	tu.mutation.ClearBookmark()
-	return tu
-}
-
-// RemoveBookmarkIDs removes the "bookmark" edge to Bookmark entities by IDs.
-func (tu *TagUpdate) RemoveBookmarkIDs(ids ...int) *TagUpdate {
-	tu.mutation.RemoveBookmarkIDs(ids...)
-	return tu
-}
-
-// RemoveBookmark removes "bookmark" edges to Bookmark entities.
-func (tu *TagUpdate) RemoveBookmark(b ...*Bookmark) *TagUpdate {
-	ids := make([]int, len(b))
-	for i := range b {
-		ids[i] = b[i].ID
-	}
-	return tu.RemoveBookmarkIDs(ids...)
-}
-
-// ClearUser clears all "user" edges to the User entity.
-func (tu *TagUpdate) ClearUser() *TagUpdate {
-	tu.mutation.ClearUser()
-	return tu
-}
-
-// RemoveUserIDs removes the "user" edge to User entities by IDs.
-func (tu *TagUpdate) RemoveUserIDs(ids ...int) *TagUpdate {
-	tu.mutation.RemoveUserIDs(ids...)
-	return tu
-}
-
-// RemoveUser removes "user" edges to User entities.
-func (tu *TagUpdate) RemoveUser(u ...*User) *TagUpdate {
-	ids := make([]int, len(u))
-	for i := range u {
-		ids[i] = u[i].ID
-	}
-	return tu.RemoveUserIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -230,114 +156,6 @@ func (tu *TagUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value, ok := tu.mutation.AddedCount(); ok {
 		_spec.AddField(tag.FieldCount, field.TypeInt, value)
 	}
-	if tu.mutation.BookmarkCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: true,
-			Table:   tag.BookmarkTable,
-			Columns: tag.BookmarkPrimaryKey,
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: bookmark.FieldID,
-				},
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := tu.mutation.RemovedBookmarkIDs(); len(nodes) > 0 && !tu.mutation.BookmarkCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: true,
-			Table:   tag.BookmarkTable,
-			Columns: tag.BookmarkPrimaryKey,
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: bookmark.FieldID,
-				},
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := tu.mutation.BookmarkIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: true,
-			Table:   tag.BookmarkTable,
-			Columns: tag.BookmarkPrimaryKey,
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: bookmark.FieldID,
-				},
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
-	if tu.mutation.UserCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: false,
-			Table:   tag.UserTable,
-			Columns: tag.UserPrimaryKey,
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: user.FieldID,
-				},
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := tu.mutation.RemovedUserIDs(); len(nodes) > 0 && !tu.mutation.UserCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: false,
-			Table:   tag.UserTable,
-			Columns: tag.UserPrimaryKey,
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: user.FieldID,
-				},
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := tu.mutation.UserIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: false,
-			Table:   tag.UserTable,
-			Columns: tag.UserPrimaryKey,
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: user.FieldID,
-				},
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
 	if n, err = sqlgraph.UpdateNodes(ctx, tu.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{tag.Label}
@@ -384,81 +202,9 @@ func (tuo *TagUpdateOne) AddCount(i int) *TagUpdateOne {
 	return tuo
 }
 
-// AddBookmarkIDs adds the "bookmark" edge to the Bookmark entity by IDs.
-func (tuo *TagUpdateOne) AddBookmarkIDs(ids ...int) *TagUpdateOne {
-	tuo.mutation.AddBookmarkIDs(ids...)
-	return tuo
-}
-
-// AddBookmark adds the "bookmark" edges to the Bookmark entity.
-func (tuo *TagUpdateOne) AddBookmark(b ...*Bookmark) *TagUpdateOne {
-	ids := make([]int, len(b))
-	for i := range b {
-		ids[i] = b[i].ID
-	}
-	return tuo.AddBookmarkIDs(ids...)
-}
-
-// AddUserIDs adds the "user" edge to the User entity by IDs.
-func (tuo *TagUpdateOne) AddUserIDs(ids ...int) *TagUpdateOne {
-	tuo.mutation.AddUserIDs(ids...)
-	return tuo
-}
-
-// AddUser adds the "user" edges to the User entity.
-func (tuo *TagUpdateOne) AddUser(u ...*User) *TagUpdateOne {
-	ids := make([]int, len(u))
-	for i := range u {
-		ids[i] = u[i].ID
-	}
-	return tuo.AddUserIDs(ids...)
-}
-
 // Mutation returns the TagMutation object of the builder.
 func (tuo *TagUpdateOne) Mutation() *TagMutation {
 	return tuo.mutation
-}
-
-// ClearBookmark clears all "bookmark" edges to the Bookmark entity.
-func (tuo *TagUpdateOne) ClearBookmark() *TagUpdateOne {
-	tuo.mutation.ClearBookmark()
-	return tuo
-}
-
-// RemoveBookmarkIDs removes the "bookmark" edge to Bookmark entities by IDs.
-func (tuo *TagUpdateOne) RemoveBookmarkIDs(ids ...int) *TagUpdateOne {
-	tuo.mutation.RemoveBookmarkIDs(ids...)
-	return tuo
-}
-
-// RemoveBookmark removes "bookmark" edges to Bookmark entities.
-func (tuo *TagUpdateOne) RemoveBookmark(b ...*Bookmark) *TagUpdateOne {
-	ids := make([]int, len(b))
-	for i := range b {
-		ids[i] = b[i].ID
-	}
-	return tuo.RemoveBookmarkIDs(ids...)
-}
-
-// ClearUser clears all "user" edges to the User entity.
-func (tuo *TagUpdateOne) ClearUser() *TagUpdateOne {
-	tuo.mutation.ClearUser()
-	return tuo
-}
-
-// RemoveUserIDs removes the "user" edge to User entities by IDs.
-func (tuo *TagUpdateOne) RemoveUserIDs(ids ...int) *TagUpdateOne {
-	tuo.mutation.RemoveUserIDs(ids...)
-	return tuo
-}
-
-// RemoveUser removes "user" edges to User entities.
-func (tuo *TagUpdateOne) RemoveUser(u ...*User) *TagUpdateOne {
-	ids := make([]int, len(u))
-	for i := range u {
-		ids[i] = u[i].ID
-	}
-	return tuo.RemoveUserIDs(ids...)
 }
 
 // Select allows selecting one or more fields (columns) of the returned entity.
@@ -587,114 +333,6 @@ func (tuo *TagUpdateOne) sqlSave(ctx context.Context) (_node *Tag, err error) {
 	}
 	if value, ok := tuo.mutation.AddedCount(); ok {
 		_spec.AddField(tag.FieldCount, field.TypeInt, value)
-	}
-	if tuo.mutation.BookmarkCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: true,
-			Table:   tag.BookmarkTable,
-			Columns: tag.BookmarkPrimaryKey,
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: bookmark.FieldID,
-				},
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := tuo.mutation.RemovedBookmarkIDs(); len(nodes) > 0 && !tuo.mutation.BookmarkCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: true,
-			Table:   tag.BookmarkTable,
-			Columns: tag.BookmarkPrimaryKey,
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: bookmark.FieldID,
-				},
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := tuo.mutation.BookmarkIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: true,
-			Table:   tag.BookmarkTable,
-			Columns: tag.BookmarkPrimaryKey,
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: bookmark.FieldID,
-				},
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
-	if tuo.mutation.UserCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: false,
-			Table:   tag.UserTable,
-			Columns: tag.UserPrimaryKey,
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: user.FieldID,
-				},
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := tuo.mutation.RemovedUserIDs(); len(nodes) > 0 && !tuo.mutation.UserCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: false,
-			Table:   tag.UserTable,
-			Columns: tag.UserPrimaryKey,
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: user.FieldID,
-				},
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := tuo.mutation.UserIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: false,
-			Table:   tag.UserTable,
-			Columns: tag.UserPrimaryKey,
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: user.FieldID,
-				},
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	_node = &Tag{config: tuo.config}
 	_spec.Assign = _node.assignValues

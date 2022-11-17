@@ -13,20 +13,15 @@ const (
 	FieldEmail = "email"
 	// EdgeBookmark holds the string denoting the bookmark edge name in mutations.
 	EdgeBookmark = "bookmark"
-	// EdgeTag holds the string denoting the tag edge name in mutations.
-	EdgeTag = "tag"
 	// Table holds the table name of the user in the database.
 	Table = "users"
-	// BookmarkTable is the table that holds the bookmark relation/edge. The primary key declared below.
-	BookmarkTable = "user_bookmark"
+	// BookmarkTable is the table that holds the bookmark relation/edge.
+	BookmarkTable = "bookmarks"
 	// BookmarkInverseTable is the table name for the Bookmark entity.
 	// It exists in this package in order to avoid circular dependency with the "bookmark" package.
 	BookmarkInverseTable = "bookmarks"
-	// TagTable is the table that holds the tag relation/edge. The primary key declared below.
-	TagTable = "tag_user"
-	// TagInverseTable is the table name for the Tag entity.
-	// It exists in this package in order to avoid circular dependency with the "tag" package.
-	TagInverseTable = "tags"
+	// BookmarkColumn is the table column denoting the bookmark relation/edge.
+	BookmarkColumn = "user_id"
 )
 
 // Columns holds all SQL columns for user fields.
@@ -35,15 +30,6 @@ var Columns = []string{
 	FieldName,
 	FieldEmail,
 }
-
-var (
-	// BookmarkPrimaryKey and BookmarkColumn2 are the table columns denoting the
-	// primary key for the bookmark relation (M2M).
-	BookmarkPrimaryKey = []string{"user_id", "bookmark_id"}
-	// TagPrimaryKey and TagColumn2 are the table columns denoting the
-	// primary key for the tag relation (M2M).
-	TagPrimaryKey = []string{"tag_id", "user_id"}
-)
 
 // ValidColumn reports if the column name is valid (part of the table columns).
 func ValidColumn(column string) bool {
