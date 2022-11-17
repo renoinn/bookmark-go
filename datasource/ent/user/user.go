@@ -13,6 +13,8 @@ const (
 	FieldEmail = "email"
 	// EdgeBookmark holds the string denoting the bookmark edge name in mutations.
 	EdgeBookmark = "bookmark"
+	// EdgeTag holds the string denoting the tag edge name in mutations.
+	EdgeTag = "tag"
 	// Table holds the table name of the user in the database.
 	Table = "users"
 	// BookmarkTable is the table that holds the bookmark relation/edge.
@@ -22,6 +24,13 @@ const (
 	BookmarkInverseTable = "bookmarks"
 	// BookmarkColumn is the table column denoting the bookmark relation/edge.
 	BookmarkColumn = "user_id"
+	// TagTable is the table that holds the tag relation/edge.
+	TagTable = "tags"
+	// TagInverseTable is the table name for the Tag entity.
+	// It exists in this package in order to avoid circular dependency with the "tag" package.
+	TagInverseTable = "tags"
+	// TagColumn is the table column denoting the tag relation/edge.
+	TagColumn = "user_tag"
 )
 
 // Columns holds all SQL columns for user fields.

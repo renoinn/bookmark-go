@@ -12,6 +12,7 @@ import (
 	"entgo.io/ent/schema/field"
 	"github.com/renoinn/bookmark-go/datasource/ent/predicate"
 	"github.com/renoinn/bookmark-go/datasource/ent/tag"
+	"github.com/renoinn/bookmark-go/datasource/ent/user"
 )
 
 // TagQuery is the builder for querying Tag entities.
@@ -23,6 +24,8 @@ type TagQuery struct {
 	order      []OrderFunc
 	fields     []string
 	predicates []predicate.Tag
+	withUser   *UserQuery
+	withFKs    bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -57,6 +60,28 @@ func (tq *TagQuery) Unique(unique bool) *TagQuery {
 func (tq *TagQuery) Order(o ...OrderFunc) *TagQuery {
 	tq.order = append(tq.order, o...)
 	return tq
+}
+
+// QueryUser chains the current query on the "user" edge.
+func (tq *TagQuery) QueryUser() *UserQuery {
+	query := &UserQuery{config: tq.config}
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := tq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := tq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(tag.Table, tag.FieldID, selector),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, tag.UserTable, tag.UserColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(tq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
 }
 
 // First returns the first Tag entity from the query.
@@ -240,11 +265,23 @@ func (tq *TagQuery) Clone() *TagQuery {
 		offset:     tq.offset,
 		order:      append([]OrderFunc{}, tq.order...),
 		predicates: append([]predicate.Tag{}, tq.predicates...),
+		withUser:   tq.withUser.Clone(),
 		// clone intermediate query.
 		sql:    tq.sql.Clone(),
 		path:   tq.path,
 		unique: tq.unique,
 	}
+}
+
+// WithUser tells the query-builder to eager-load the nodes that are connected to
+// the "user" edge. The optional arguments are used to configure the query builder of the edge.
+func (tq *TagQuery) WithUser(opts ...func(*UserQuery)) *TagQuery {
+	query := &UserQuery{config: tq.config}
+	for _, opt := range opts {
+		opt(query)
+	}
+	tq.withUser = query
+	return tq
 }
 
 // GroupBy is used to group vertices by one or more fields/columns.
@@ -253,12 +290,12 @@ func (tq *TagQuery) Clone() *TagQuery {
 // Example:
 //
 //	var v []struct {
-//		Name string `json:"name,omitempty"`
+//		UserID int `json:"user_id,omitempty"`
 //		Count int `json:"count,omitempty"`
 //	}
 //
 //	client.Tag.Query().
-//		GroupBy(tag.FieldName).
+//		GroupBy(tag.FieldUserID).
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
 func (tq *TagQuery) GroupBy(field string, fields ...string) *TagGroupBy {
@@ -281,11 +318,11 @@ func (tq *TagQuery) GroupBy(field string, fields ...string) *TagGroupBy {
 // Example:
 //
 //	var v []struct {
-//		Name string `json:"name,omitempty"`
+//		UserID int `json:"user_id,omitempty"`
 //	}
 //
 //	client.Tag.Query().
-//		Select(tag.FieldName).
+//		Select(tag.FieldUserID).
 //		Scan(ctx, &v)
 func (tq *TagQuery) Select(fields ...string) *TagSelect {
 	tq.fields = append(tq.fields, fields...)
@@ -318,15 +355,26 @@ func (tq *TagQuery) prepareQuery(ctx context.Context) error {
 
 func (tq *TagQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Tag, error) {
 	var (
-		nodes = []*Tag{}
-		_spec = tq.querySpec()
+		nodes       = []*Tag{}
+		withFKs     = tq.withFKs
+		_spec       = tq.querySpec()
+		loadedTypes = [1]bool{
+			tq.withUser != nil,
+		}
 	)
+	if tq.withUser != nil {
+		withFKs = true
+	}
+	if withFKs {
+		_spec.Node.Columns = append(_spec.Node.Columns, tag.ForeignKeys...)
+	}
 	_spec.ScanValues = func(columns []string) ([]any, error) {
 		return (*Tag).scanValues(nil, columns)
 	}
 	_spec.Assign = func(columns []string, values []any) error {
 		node := &Tag{config: tq.config}
 		nodes = append(nodes, node)
+		node.Edges.loadedTypes = loadedTypes
 		return node.assignValues(columns, values)
 	}
 	for i := range hooks {
@@ -338,7 +386,43 @@ func (tq *TagQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Tag, err
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
+	if query := tq.withUser; query != nil {
+		if err := tq.loadUser(ctx, query, nodes, nil,
+			func(n *Tag, e *User) { n.Edges.User = e }); err != nil {
+			return nil, err
+		}
+	}
 	return nodes, nil
+}
+
+func (tq *TagQuery) loadUser(ctx context.Context, query *UserQuery, nodes []*Tag, init func(*Tag), assign func(*Tag, *User)) error {
+	ids := make([]int, 0, len(nodes))
+	nodeids := make(map[int][]*Tag)
+	for i := range nodes {
+		if nodes[i].user_tag == nil {
+			continue
+		}
+		fk := *nodes[i].user_tag
+		if _, ok := nodeids[fk]; !ok {
+			ids = append(ids, fk)
+		}
+		nodeids[fk] = append(nodeids[fk], nodes[i])
+	}
+	query.Where(user.IDIn(ids...))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		nodes, ok := nodeids[n.ID]
+		if !ok {
+			return fmt.Errorf(`unexpected foreign-key "user_tag" returned %v`, n.ID)
+		}
+		for i := range nodes {
+			assign(nodes[i], n)
+		}
+	}
+	return nil
 }
 
 func (tq *TagQuery) sqlCount(ctx context.Context) (int, error) {

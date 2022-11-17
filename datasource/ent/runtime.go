@@ -65,11 +65,11 @@ func init() {
 	tagFields := schema.Tag{}.Fields()
 	_ = tagFields
 	// tagDescName is the schema descriptor for name field.
-	tagDescName := tagFields[0].Descriptor()
+	tagDescName := tagFields[1].Descriptor()
 	// tag.NameValidator is a validator for the "name" field. It is called by the builders before save.
 	tag.NameValidator = tagDescName.Validators[0].(func(string) error)
 	// tagDescCount is the schema descriptor for count field.
-	tagDescCount := tagFields[1].Descriptor()
+	tagDescCount := tagFields[2].Descriptor()
 	// tag.DefaultCount holds the default value on creation for the count field.
 	tag.DefaultCount = tagDescCount.Default.(int)
 	userFields := schema.User{}.Fields()

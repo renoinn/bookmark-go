@@ -457,6 +457,22 @@ func (c *TagClient) GetX(ctx context.Context, id int) *Tag {
 	return obj
 }
 
+// QueryUser queries the user edge of a Tag.
+func (c *TagClient) QueryUser(t *Tag) *UserQuery {
+	query := &UserQuery{config: c.config}
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := t.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(tag.Table, tag.FieldID, id),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, tag.UserTable, tag.UserColumn),
+		)
+		fromV = sqlgraph.Neighbors(t.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // Hooks returns the client hooks.
 func (c *TagClient) Hooks() []Hook {
 	return c.hooks.Tag
@@ -556,6 +572,22 @@ func (c *UserClient) QueryBookmark(u *User) *BookmarkQuery {
 			sqlgraph.From(user.Table, user.FieldID, id),
 			sqlgraph.To(bookmark.Table, bookmark.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, user.BookmarkTable, user.BookmarkColumn),
+		)
+		fromV = sqlgraph.Neighbors(u.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryTag queries the tag edge of a User.
+func (c *UserClient) QueryTag(u *User) *TagQuery {
+	query := &TagQuery{config: c.config}
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := u.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, id),
+			sqlgraph.To(tag.Table, tag.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.TagTable, user.TagColumn),
 		)
 		fromV = sqlgraph.Neighbors(u.driver.Dialect(), step)
 		return fromV, nil

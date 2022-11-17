@@ -10,6 +10,7 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/renoinn/bookmark-go/datasource/ent/tag"
+	"github.com/renoinn/bookmark-go/datasource/ent/user"
 )
 
 // TagCreate is the builder for creating a Tag entity.
@@ -17,6 +18,12 @@ type TagCreate struct {
 	config
 	mutation *TagMutation
 	hooks    []Hook
+}
+
+// SetUserID sets the "user_id" field.
+func (tc *TagCreate) SetUserID(i int) *TagCreate {
+	tc.mutation.SetUserID(i)
+	return tc
 }
 
 // SetName sets the "name" field.
@@ -37,6 +44,17 @@ func (tc *TagCreate) SetNillableCount(i *int) *TagCreate {
 		tc.SetCount(*i)
 	}
 	return tc
+}
+
+// SetUserID sets the "user" edge to the User entity by ID.
+func (tc *TagCreate) SetUserID(id int) *TagCreate {
+	tc.mutation.SetUserID(id)
+	return tc
+}
+
+// SetUser sets the "user" edge to the User entity.
+func (tc *TagCreate) SetUser(u *User) *TagCreate {
+	return tc.SetUserID(u.ID)
 }
 
 // Mutation returns the TagMutation object of the builder.
@@ -124,6 +142,9 @@ func (tc *TagCreate) defaults() {
 
 // check runs all checks and user-defined validators on the builder.
 func (tc *TagCreate) check() error {
+	if _, ok := tc.mutation.UserID(); !ok {
+		return &ValidationError{Name: "user_id", err: errors.New(`ent: missing required field "Tag.user_id"`)}
+	}
 	if _, ok := tc.mutation.Name(); !ok {
 		return &ValidationError{Name: "name", err: errors.New(`ent: missing required field "Tag.name"`)}
 	}
@@ -134,6 +155,9 @@ func (tc *TagCreate) check() error {
 	}
 	if _, ok := tc.mutation.Count(); !ok {
 		return &ValidationError{Name: "count", err: errors.New(`ent: missing required field "Tag.count"`)}
+	}
+	if _, ok := tc.mutation.UserID(); !ok {
+		return &ValidationError{Name: "user", err: errors.New(`ent: missing required edge "Tag.user"`)}
 	}
 	return nil
 }
@@ -162,6 +186,10 @@ func (tc *TagCreate) createSpec() (*Tag, *sqlgraph.CreateSpec) {
 			},
 		}
 	)
+	if value, ok := tc.mutation.UserID(); ok {
+		_spec.SetField(tag.FieldUserID, field.TypeInt, value)
+		_node.UserID = value
+	}
 	if value, ok := tc.mutation.Name(); ok {
 		_spec.SetField(tag.FieldName, field.TypeString, value)
 		_node.Name = value
@@ -169,6 +197,26 @@ func (tc *TagCreate) createSpec() (*Tag, *sqlgraph.CreateSpec) {
 	if value, ok := tc.mutation.Count(); ok {
 		_spec.SetField(tag.FieldCount, field.TypeInt, value)
 		_node.Count = value
+	}
+	if nodes := tc.mutation.UserIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   tag.UserTable,
+			Columns: []string{tag.UserColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: user.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_node.user_tag = &nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec
 }

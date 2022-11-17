@@ -52,14 +52,24 @@ var (
 	// TagsColumns holds the columns for the "tags" table.
 	TagsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "user_id", Type: field.TypeInt},
 		{Name: "name", Type: field.TypeString},
 		{Name: "count", Type: field.TypeInt, Default: 0},
+		{Name: "user_tag", Type: field.TypeInt},
 	}
 	// TagsTable holds the schema information for the "tags" table.
 	TagsTable = &schema.Table{
 		Name:       "tags",
 		Columns:    TagsColumns,
 		PrimaryKey: []*schema.Column{TagsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "tags_users_tag",
+				Columns:    []*schema.Column{TagsColumns[4]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
 	}
 	// UsersColumns holds the columns for the "users" table.
 	UsersColumns = []*schema.Column{
@@ -85,6 +95,7 @@ var (
 func init() {
 	BookmarksTable.ForeignKeys[0].RefTable = SitesTable
 	BookmarksTable.ForeignKeys[1].RefTable = UsersTable
+	TagsTable.ForeignKeys[0].RefTable = UsersTable
 	UsersTable.Annotation = &entsql.Annotation{
 		Table: "users",
 	}

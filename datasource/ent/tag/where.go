@@ -4,6 +4,7 @@ package tag
 
 import (
 	"entgo.io/ent/dialect/sql"
+	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/renoinn/bookmark-go/datasource/ent/predicate"
 )
 
@@ -78,6 +79,13 @@ func IDLTE(id int) predicate.Tag {
 	})
 }
 
+// UserID applies equality check predicate on the "user_id" field. It's identical to UserIDEQ.
+func UserID(v int) predicate.Tag {
+	return predicate.Tag(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldUserID), v))
+	})
+}
+
 // Name applies equality check predicate on the "name" field. It's identical to NameEQ.
 func Name(v string) predicate.Tag {
 	return predicate.Tag(func(s *sql.Selector) {
@@ -89,6 +97,70 @@ func Name(v string) predicate.Tag {
 func Count(v int) predicate.Tag {
 	return predicate.Tag(func(s *sql.Selector) {
 		s.Where(sql.EQ(s.C(FieldCount), v))
+	})
+}
+
+// UserIDEQ applies the EQ predicate on the "user_id" field.
+func UserIDEQ(v int) predicate.Tag {
+	return predicate.Tag(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldUserID), v))
+	})
+}
+
+// UserIDNEQ applies the NEQ predicate on the "user_id" field.
+func UserIDNEQ(v int) predicate.Tag {
+	return predicate.Tag(func(s *sql.Selector) {
+		s.Where(sql.NEQ(s.C(FieldUserID), v))
+	})
+}
+
+// UserIDIn applies the In predicate on the "user_id" field.
+func UserIDIn(vs ...int) predicate.Tag {
+	v := make([]any, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Tag(func(s *sql.Selector) {
+		s.Where(sql.In(s.C(FieldUserID), v...))
+	})
+}
+
+// UserIDNotIn applies the NotIn predicate on the "user_id" field.
+func UserIDNotIn(vs ...int) predicate.Tag {
+	v := make([]any, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Tag(func(s *sql.Selector) {
+		s.Where(sql.NotIn(s.C(FieldUserID), v...))
+	})
+}
+
+// UserIDGT applies the GT predicate on the "user_id" field.
+func UserIDGT(v int) predicate.Tag {
+	return predicate.Tag(func(s *sql.Selector) {
+		s.Where(sql.GT(s.C(FieldUserID), v))
+	})
+}
+
+// UserIDGTE applies the GTE predicate on the "user_id" field.
+func UserIDGTE(v int) predicate.Tag {
+	return predicate.Tag(func(s *sql.Selector) {
+		s.Where(sql.GTE(s.C(FieldUserID), v))
+	})
+}
+
+// UserIDLT applies the LT predicate on the "user_id" field.
+func UserIDLT(v int) predicate.Tag {
+	return predicate.Tag(func(s *sql.Selector) {
+		s.Where(sql.LT(s.C(FieldUserID), v))
+	})
+}
+
+// UserIDLTE applies the LTE predicate on the "user_id" field.
+func UserIDLTE(v int) predicate.Tag {
+	return predicate.Tag(func(s *sql.Selector) {
+		s.Where(sql.LTE(s.C(FieldUserID), v))
 	})
 }
 
@@ -252,6 +324,34 @@ func CountLT(v int) predicate.Tag {
 func CountLTE(v int) predicate.Tag {
 	return predicate.Tag(func(s *sql.Selector) {
 		s.Where(sql.LTE(s.C(FieldCount), v))
+	})
+}
+
+// HasUser applies the HasEdge predicate on the "user" edge.
+func HasUser() predicate.Tag {
+	return predicate.Tag(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.To(UserTable, FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, UserTable, UserColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasUserWith applies the HasEdge predicate on the "user" edge with a given conditions (other predicates).
+func HasUserWith(preds ...predicate.User) predicate.Tag {
+	return predicate.Tag(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.To(UserInverseTable, FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, UserTable, UserColumn),
+		)
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
 	})
 }
 

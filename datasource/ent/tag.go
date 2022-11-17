@@ -8,6 +8,7 @@ import (
 
 	"entgo.io/ent/dialect/sql"
 	"github.com/renoinn/bookmark-go/datasource/ent/tag"
+	"github.com/renoinn/bookmark-go/datasource/ent/user"
 )
 
 // Tag is the model entity for the Tag schema.
@@ -15,10 +16,38 @@ type Tag struct {
 	config `json:"-"`
 	// ID of the ent.
 	ID int `json:"id,omitempty"`
+	// UserID holds the value of the "user_id" field.
+	UserID int `json:"user_id,omitempty"`
 	// Name holds the value of the "name" field.
 	Name string `json:"name,omitempty"`
 	// Count holds the value of the "count" field.
 	Count int `json:"count,omitempty"`
+	// Edges holds the relations/edges for other nodes in the graph.
+	// The values are being populated by the TagQuery when eager-loading is set.
+	Edges    TagEdges `json:"edges"`
+	user_tag *int
+}
+
+// TagEdges holds the relations/edges for other nodes in the graph.
+type TagEdges struct {
+	// User holds the value of the user edge.
+	User *User `json:"user,omitempty"`
+	// loadedTypes holds the information for reporting if a
+	// type was loaded (or requested) in eager-loading or not.
+	loadedTypes [1]bool
+}
+
+// UserOrErr returns the User value or an error if the edge
+// was not loaded in eager-loading, or loaded but was not found.
+func (e TagEdges) UserOrErr() (*User, error) {
+	if e.loadedTypes[0] {
+		if e.User == nil {
+			// Edge was loaded but was not found.
+			return nil, &NotFoundError{label: user.Label}
+		}
+		return e.User, nil
+	}
+	return nil, &NotLoadedError{edge: "user"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -26,10 +55,12 @@ func (*Tag) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case tag.FieldID, tag.FieldCount:
+		case tag.FieldID, tag.FieldUserID, tag.FieldCount:
 			values[i] = new(sql.NullInt64)
 		case tag.FieldName:
 			values[i] = new(sql.NullString)
+		case tag.ForeignKeys[0]: // user_tag
+			values[i] = new(sql.NullInt64)
 		default:
 			return nil, fmt.Errorf("unexpected column %q for type Tag", columns[i])
 		}
@@ -51,6 +82,12 @@ func (t *Tag) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field id", value)
 			}
 			t.ID = int(value.Int64)
+		case tag.FieldUserID:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field user_id", values[i])
+			} else if value.Valid {
+				t.UserID = int(value.Int64)
+			}
 		case tag.FieldName:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field name", values[i])
@@ -63,9 +100,21 @@ func (t *Tag) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				t.Count = int(value.Int64)
 			}
+		case tag.ForeignKeys[0]:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for edge-field user_tag", value)
+			} else if value.Valid {
+				t.user_tag = new(int)
+				*t.user_tag = int(value.Int64)
+			}
 		}
 	}
 	return nil
+}
+
+// QueryUser queries the "user" edge of the Tag entity.
+func (t *Tag) QueryUser() *UserQuery {
+	return (&TagClient{config: t.config}).QueryUser(t)
 }
 
 // Update returns a builder for updating this Tag.
@@ -91,6 +140,9 @@ func (t *Tag) String() string {
 	var builder strings.Builder
 	builder.WriteString("Tag(")
 	builder.WriteString(fmt.Sprintf("id=%v, ", t.ID))
+	builder.WriteString("user_id=")
+	builder.WriteString(fmt.Sprintf("%v", t.UserID))
+	builder.WriteString(", ")
 	builder.WriteString("name=")
 	builder.WriteString(t.Name)
 	builder.WriteString(", ")

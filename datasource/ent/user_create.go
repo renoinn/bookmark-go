@@ -10,6 +10,7 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/renoinn/bookmark-go/datasource/ent/bookmark"
+	"github.com/renoinn/bookmark-go/datasource/ent/tag"
 	"github.com/renoinn/bookmark-go/datasource/ent/user"
 )
 
@@ -45,6 +46,21 @@ func (uc *UserCreate) AddBookmark(b ...*Bookmark) *UserCreate {
 		ids[i] = b[i].ID
 	}
 	return uc.AddBookmarkIDs(ids...)
+}
+
+// AddTagIDs adds the "tag" edge to the Tag entity by IDs.
+func (uc *UserCreate) AddTagIDs(ids ...int) *UserCreate {
+	uc.mutation.AddTagIDs(ids...)
+	return uc
+}
+
+// AddTag adds the "tag" edges to the Tag entity.
+func (uc *UserCreate) AddTag(t ...*Tag) *UserCreate {
+	ids := make([]int, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
+	}
+	return uc.AddTagIDs(ids...)
 }
 
 // Mutation returns the UserMutation object of the builder.
@@ -180,6 +196,25 @@ func (uc *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 				IDSpec: &sqlgraph.FieldSpec{
 					Type:   field.TypeInt,
 					Column: bookmark.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := uc.mutation.TagIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.TagTable,
+			Columns: []string{user.TagColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: tag.FieldID,
 				},
 			},
 		}

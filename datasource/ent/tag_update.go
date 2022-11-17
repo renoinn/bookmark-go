@@ -12,6 +12,7 @@ import (
 	"entgo.io/ent/schema/field"
 	"github.com/renoinn/bookmark-go/datasource/ent/predicate"
 	"github.com/renoinn/bookmark-go/datasource/ent/tag"
+	"github.com/renoinn/bookmark-go/datasource/ent/user"
 )
 
 // TagUpdate is the builder for updating Tag entities.
@@ -24,6 +25,19 @@ type TagUpdate struct {
 // Where appends a list predicates to the TagUpdate builder.
 func (tu *TagUpdate) Where(ps ...predicate.Tag) *TagUpdate {
 	tu.mutation.Where(ps...)
+	return tu
+}
+
+// SetUserID sets the "user_id" field.
+func (tu *TagUpdate) SetUserID(i int) *TagUpdate {
+	tu.mutation.ResetUserID()
+	tu.mutation.SetUserID(i)
+	return tu
+}
+
+// AddUserID adds i to the "user_id" field.
+func (tu *TagUpdate) AddUserID(i int) *TagUpdate {
+	tu.mutation.AddUserID(i)
 	return tu
 }
 
@@ -54,9 +68,26 @@ func (tu *TagUpdate) AddCount(i int) *TagUpdate {
 	return tu
 }
 
+// SetUserID sets the "user" edge to the User entity by ID.
+func (tu *TagUpdate) SetUserID(id int) *TagUpdate {
+	tu.mutation.SetUserID(id)
+	return tu
+}
+
+// SetUser sets the "user" edge to the User entity.
+func (tu *TagUpdate) SetUser(u *User) *TagUpdate {
+	return tu.SetUserID(u.ID)
+}
+
 // Mutation returns the TagMutation object of the builder.
 func (tu *TagUpdate) Mutation() *TagMutation {
 	return tu.mutation
+}
+
+// ClearUser clears the "user" edge to the User entity.
+func (tu *TagUpdate) ClearUser() *TagUpdate {
+	tu.mutation.ClearUser()
+	return tu
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -126,6 +157,9 @@ func (tu *TagUpdate) check() error {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "Tag.name": %w`, err)}
 		}
 	}
+	if _, ok := tu.mutation.UserID(); tu.mutation.UserCleared() && !ok {
+		return errors.New(`ent: clearing a required unique edge "Tag.user"`)
+	}
 	return nil
 }
 
@@ -147,6 +181,12 @@ func (tu *TagUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			}
 		}
 	}
+	if value, ok := tu.mutation.UserID(); ok {
+		_spec.SetField(tag.FieldUserID, field.TypeInt, value)
+	}
+	if value, ok := tu.mutation.AddedUserID(); ok {
+		_spec.AddField(tag.FieldUserID, field.TypeInt, value)
+	}
 	if value, ok := tu.mutation.Name(); ok {
 		_spec.SetField(tag.FieldName, field.TypeString, value)
 	}
@@ -155,6 +195,41 @@ func (tu *TagUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if value, ok := tu.mutation.AddedCount(); ok {
 		_spec.AddField(tag.FieldCount, field.TypeInt, value)
+	}
+	if tu.mutation.UserCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   tag.UserTable,
+			Columns: []string{tag.UserColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: user.FieldID,
+				},
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := tu.mutation.UserIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   tag.UserTable,
+			Columns: []string{tag.UserColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: user.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	if n, err = sqlgraph.UpdateNodes(ctx, tu.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
@@ -173,6 +248,19 @@ type TagUpdateOne struct {
 	fields   []string
 	hooks    []Hook
 	mutation *TagMutation
+}
+
+// SetUserID sets the "user_id" field.
+func (tuo *TagUpdateOne) SetUserID(i int) *TagUpdateOne {
+	tuo.mutation.ResetUserID()
+	tuo.mutation.SetUserID(i)
+	return tuo
+}
+
+// AddUserID adds i to the "user_id" field.
+func (tuo *TagUpdateOne) AddUserID(i int) *TagUpdateOne {
+	tuo.mutation.AddUserID(i)
+	return tuo
 }
 
 // SetName sets the "name" field.
@@ -202,9 +290,26 @@ func (tuo *TagUpdateOne) AddCount(i int) *TagUpdateOne {
 	return tuo
 }
 
+// SetUserID sets the "user" edge to the User entity by ID.
+func (tuo *TagUpdateOne) SetUserID(id int) *TagUpdateOne {
+	tuo.mutation.SetUserID(id)
+	return tuo
+}
+
+// SetUser sets the "user" edge to the User entity.
+func (tuo *TagUpdateOne) SetUser(u *User) *TagUpdateOne {
+	return tuo.SetUserID(u.ID)
+}
+
 // Mutation returns the TagMutation object of the builder.
 func (tuo *TagUpdateOne) Mutation() *TagMutation {
 	return tuo.mutation
+}
+
+// ClearUser clears the "user" edge to the User entity.
+func (tuo *TagUpdateOne) ClearUser() *TagUpdateOne {
+	tuo.mutation.ClearUser()
+	return tuo
 }
 
 // Select allows selecting one or more fields (columns) of the returned entity.
@@ -287,6 +392,9 @@ func (tuo *TagUpdateOne) check() error {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "Tag.name": %w`, err)}
 		}
 	}
+	if _, ok := tuo.mutation.UserID(); tuo.mutation.UserCleared() && !ok {
+		return errors.New(`ent: clearing a required unique edge "Tag.user"`)
+	}
 	return nil
 }
 
@@ -325,6 +433,12 @@ func (tuo *TagUpdateOne) sqlSave(ctx context.Context) (_node *Tag, err error) {
 			}
 		}
 	}
+	if value, ok := tuo.mutation.UserID(); ok {
+		_spec.SetField(tag.FieldUserID, field.TypeInt, value)
+	}
+	if value, ok := tuo.mutation.AddedUserID(); ok {
+		_spec.AddField(tag.FieldUserID, field.TypeInt, value)
+	}
 	if value, ok := tuo.mutation.Name(); ok {
 		_spec.SetField(tag.FieldName, field.TypeString, value)
 	}
@@ -333,6 +447,41 @@ func (tuo *TagUpdateOne) sqlSave(ctx context.Context) (_node *Tag, err error) {
 	}
 	if value, ok := tuo.mutation.AddedCount(); ok {
 		_spec.AddField(tag.FieldCount, field.TypeInt, value)
+	}
+	if tuo.mutation.UserCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   tag.UserTable,
+			Columns: []string{tag.UserColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: user.FieldID,
+				},
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := tuo.mutation.UserIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   tag.UserTable,
+			Columns: []string{tag.UserColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: user.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	_node = &Tag{config: tuo.config}
 	_spec.Assign = _node.assignValues

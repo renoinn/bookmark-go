@@ -2,6 +2,7 @@ package schema
 
 import (
 	"entgo.io/ent"
+	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
 )
 
@@ -13,6 +14,7 @@ type Tag struct {
 // Fields of the Tag.
 func (Tag) Fields() []ent.Field {
 	return []ent.Field{
+		field.Int("user_id"),
 		field.String("name").
 			NotEmpty(),
 		field.Int("count").
@@ -22,12 +24,10 @@ func (Tag) Fields() []ent.Field {
 
 // Edges of the Tag.
 func (Tag) Edges() []ent.Edge {
-	return nil
-	/*
-		return []ent.Edge{
-			edge.From("bookmark", Bookmark.Type).
-				Ref("tag"),
-			edge.To("user", User.Type),
-		}
-	*/
+	return []ent.Edge{
+		edge.From("user", User.Type).
+			Ref("tag").
+            Unique().
+            Required(),
+	}
 }
