@@ -33,14 +33,14 @@ func (uc *UserCreate) SetEmail(s string) *UserCreate {
 	return uc
 }
 
-// AddBookmarkIDs adds the "bookmark" edge to the Bookmark entity by IDs.
+// AddBookmarkIDs adds the "bookmarks" edge to the Bookmark entity by IDs.
 func (uc *UserCreate) AddBookmarkIDs(ids ...int) *UserCreate {
 	uc.mutation.AddBookmarkIDs(ids...)
 	return uc
 }
 
-// AddBookmark adds the "bookmark" edges to the Bookmark entity.
-func (uc *UserCreate) AddBookmark(b ...*Bookmark) *UserCreate {
+// AddBookmarks adds the "bookmarks" edges to the Bookmark entity.
+func (uc *UserCreate) AddBookmarks(b ...*Bookmark) *UserCreate {
 	ids := make([]int, len(b))
 	for i := range b {
 		ids[i] = b[i].ID
@@ -48,14 +48,14 @@ func (uc *UserCreate) AddBookmark(b ...*Bookmark) *UserCreate {
 	return uc.AddBookmarkIDs(ids...)
 }
 
-// AddTagIDs adds the "tag" edge to the Tag entity by IDs.
+// AddTagIDs adds the "tags" edge to the Tag entity by IDs.
 func (uc *UserCreate) AddTagIDs(ids ...int) *UserCreate {
 	uc.mutation.AddTagIDs(ids...)
 	return uc
 }
 
-// AddTag adds the "tag" edges to the Tag entity.
-func (uc *UserCreate) AddTag(t ...*Tag) *UserCreate {
+// AddTags adds the "tags" edges to the Tag entity.
+func (uc *UserCreate) AddTags(t ...*Tag) *UserCreate {
 	ids := make([]int, len(t))
 	for i := range t {
 		ids[i] = t[i].ID
@@ -185,12 +185,12 @@ func (uc *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 		_spec.SetField(user.FieldEmail, field.TypeString, value)
 		_node.Email = value
 	}
-	if nodes := uc.mutation.BookmarkIDs(); len(nodes) > 0 {
+	if nodes := uc.mutation.BookmarksIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   user.BookmarkTable,
-			Columns: []string{user.BookmarkColumn},
+			Table:   user.BookmarksTable,
+			Columns: []string{user.BookmarksColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
@@ -204,12 +204,12 @@ func (uc *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 		}
 		_spec.Edges = append(_spec.Edges, edge)
 	}
-	if nodes := uc.mutation.TagIDs(); len(nodes) > 0 {
+	if nodes := uc.mutation.TagsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   user.TagTable,
-			Columns: []string{user.TagColumn},
+			Table:   user.TagsTable,
+			Columns: []string{user.TagsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{

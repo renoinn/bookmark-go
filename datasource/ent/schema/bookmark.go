@@ -14,8 +14,6 @@ type Bookmark struct {
 // Fields of the Bookmark.
 func (Bookmark) Fields() []ent.Field {
 	return []ent.Field{
-        field.Int("user_id"),
-        field.Int("site_id"),
 		field.String("title").
 			NotEmpty(),
 		field.String("note").
@@ -26,15 +24,16 @@ func (Bookmark) Fields() []ent.Field {
 // Edges of the Bookmark.
 func (Bookmark) Edges() []ent.Edge {
 	return []ent.Edge{
-		edge.From("site", Site.Type).
-			Ref("bookmark").
+		edge.From("have_site", Site.Type).
+			Ref("bookmark_from").
             Field("site_id").
             Required().
             Unique(),
-		edge.From("user", User.Type).
-			Ref("bookmark").
+		edge.From("owner", User.Type).
+			Ref("bookmarks").
             Field("user_id").
             Required().
             Unique(),
+        edge.To("tags", Tag.Type),
 	}
 }

@@ -9,6 +9,7 @@ import (
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/renoinn/bookmark-go/datasource/ent/bookmark"
 	"github.com/renoinn/bookmark-go/datasource/ent/tag"
 	"github.com/renoinn/bookmark-go/datasource/ent/user"
 )
@@ -46,15 +47,30 @@ func (tc *TagCreate) SetNillableCount(i *int) *TagCreate {
 	return tc
 }
 
-// SetUserID sets the "user" edge to the User entity by ID.
-func (tc *TagCreate) SetUserID(id int) *TagCreate {
-	tc.mutation.SetUserID(id)
+// SetOwnerID sets the "owner" edge to the User entity by ID.
+func (tc *TagCreate) SetOwnerID(id int) *TagCreate {
+	tc.mutation.SetOwnerID(id)
 	return tc
 }
 
-// SetUser sets the "user" edge to the User entity.
-func (tc *TagCreate) SetUser(u *User) *TagCreate {
-	return tc.SetUserID(u.ID)
+// SetOwner sets the "owner" edge to the User entity.
+func (tc *TagCreate) SetOwner(u *User) *TagCreate {
+	return tc.SetOwnerID(u.ID)
+}
+
+// AddBookmarkIDs adds the "bookmarks" edge to the Bookmark entity by IDs.
+func (tc *TagCreate) AddBookmarkIDs(ids ...int) *TagCreate {
+	tc.mutation.AddBookmarkIDs(ids...)
+	return tc
+}
+
+// AddBookmarks adds the "bookmarks" edges to the Bookmark entity.
+func (tc *TagCreate) AddBookmarks(b ...*Bookmark) *TagCreate {
+	ids := make([]int, len(b))
+	for i := range b {
+		ids[i] = b[i].ID
+	}
+	return tc.AddBookmarkIDs(ids...)
 }
 
 // Mutation returns the TagMutation object of the builder.
@@ -156,8 +172,8 @@ func (tc *TagCreate) check() error {
 	if _, ok := tc.mutation.Count(); !ok {
 		return &ValidationError{Name: "count", err: errors.New(`ent: missing required field "Tag.count"`)}
 	}
-	if _, ok := tc.mutation.UserID(); !ok {
-		return &ValidationError{Name: "user", err: errors.New(`ent: missing required edge "Tag.user"`)}
+	if _, ok := tc.mutation.OwnerID(); !ok {
+		return &ValidationError{Name: "owner", err: errors.New(`ent: missing required edge "Tag.owner"`)}
 	}
 	return nil
 }
@@ -198,12 +214,12 @@ func (tc *TagCreate) createSpec() (*Tag, *sqlgraph.CreateSpec) {
 		_spec.SetField(tag.FieldCount, field.TypeInt, value)
 		_node.Count = value
 	}
-	if nodes := tc.mutation.UserIDs(); len(nodes) > 0 {
+	if nodes := tc.mutation.OwnerIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
-			Table:   tag.UserTable,
-			Columns: []string{tag.UserColumn},
+			Table:   tag.OwnerTable,
+			Columns: []string{tag.OwnerColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
@@ -215,7 +231,26 @@ func (tc *TagCreate) createSpec() (*Tag, *sqlgraph.CreateSpec) {
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
-		_node.user_tag = &nodes[0]
+		_node.user_tags = &nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := tc.mutation.BookmarksIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   tag.BookmarksTable,
+			Columns: tag.BookmarksPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: bookmark.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec

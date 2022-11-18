@@ -11,26 +11,26 @@ const (
 	FieldName = "name"
 	// FieldEmail holds the string denoting the email field in the database.
 	FieldEmail = "email"
-	// EdgeBookmark holds the string denoting the bookmark edge name in mutations.
-	EdgeBookmark = "bookmark"
-	// EdgeTag holds the string denoting the tag edge name in mutations.
-	EdgeTag = "tag"
+	// EdgeBookmarks holds the string denoting the bookmarks edge name in mutations.
+	EdgeBookmarks = "bookmarks"
+	// EdgeTags holds the string denoting the tags edge name in mutations.
+	EdgeTags = "tags"
 	// Table holds the table name of the user in the database.
 	Table = "users"
-	// BookmarkTable is the table that holds the bookmark relation/edge.
-	BookmarkTable = "bookmarks"
-	// BookmarkInverseTable is the table name for the Bookmark entity.
+	// BookmarksTable is the table that holds the bookmarks relation/edge.
+	BookmarksTable = "bookmarks"
+	// BookmarksInverseTable is the table name for the Bookmark entity.
 	// It exists in this package in order to avoid circular dependency with the "bookmark" package.
-	BookmarkInverseTable = "bookmarks"
-	// BookmarkColumn is the table column denoting the bookmark relation/edge.
-	BookmarkColumn = "user_id"
-	// TagTable is the table that holds the tag relation/edge.
-	TagTable = "tags"
-	// TagInverseTable is the table name for the Tag entity.
+	BookmarksInverseTable = "bookmarks"
+	// BookmarksColumn is the table column denoting the bookmarks relation/edge.
+	BookmarksColumn = "user_id"
+	// TagsTable is the table that holds the tags relation/edge.
+	TagsTable = "tags"
+	// TagsInverseTable is the table name for the Tag entity.
 	// It exists in this package in order to avoid circular dependency with the "tag" package.
-	TagInverseTable = "tags"
-	// TagColumn is the table column denoting the tag relation/edge.
-	TagColumn = "user_tag"
+	TagsInverseTable = "tags"
+	// TagsColumn is the table column denoting the tags relation/edge.
+	TagsColumn = "user_tags"
 )
 
 // Columns holds all SQL columns for user fields.

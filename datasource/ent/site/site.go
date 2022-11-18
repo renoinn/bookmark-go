@@ -11,17 +11,17 @@ const (
 	FieldURL = "url"
 	// FieldTitle holds the string denoting the title field in the database.
 	FieldTitle = "title"
-	// EdgeBookmark holds the string denoting the bookmark edge name in mutations.
-	EdgeBookmark = "bookmark"
+	// EdgeBookmarkFrom holds the string denoting the bookmark_from edge name in mutations.
+	EdgeBookmarkFrom = "bookmark_from"
 	// Table holds the table name of the site in the database.
 	Table = "sites"
-	// BookmarkTable is the table that holds the bookmark relation/edge.
-	BookmarkTable = "bookmarks"
-	// BookmarkInverseTable is the table name for the Bookmark entity.
+	// BookmarkFromTable is the table that holds the bookmark_from relation/edge.
+	BookmarkFromTable = "bookmarks"
+	// BookmarkFromInverseTable is the table name for the Bookmark entity.
 	// It exists in this package in order to avoid circular dependency with the "bookmark" package.
-	BookmarkInverseTable = "bookmarks"
-	// BookmarkColumn is the table column denoting the bookmark relation/edge.
-	BookmarkColumn = "site_id"
+	BookmarkFromInverseTable = "bookmarks"
+	// BookmarkFromColumn is the table column denoting the bookmark_from relation/edge.
+	BookmarkFromColumn = "site_id"
 )
 
 // Columns holds all SQL columns for site fields.

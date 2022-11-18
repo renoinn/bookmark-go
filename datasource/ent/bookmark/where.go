@@ -377,25 +377,25 @@ func NoteContainsFold(v string) predicate.Bookmark {
 	})
 }
 
-// HasSite applies the HasEdge predicate on the "site" edge.
-func HasSite() predicate.Bookmark {
+// HasHaveSite applies the HasEdge predicate on the "have_site" edge.
+func HasHaveSite() predicate.Bookmark {
 	return predicate.Bookmark(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.To(SiteTable, FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, SiteTable, SiteColumn),
+			sqlgraph.To(HaveSiteTable, FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, HaveSiteTable, HaveSiteColumn),
 		)
 		sqlgraph.HasNeighbors(s, step)
 	})
 }
 
-// HasSiteWith applies the HasEdge predicate on the "site" edge with a given conditions (other predicates).
-func HasSiteWith(preds ...predicate.Site) predicate.Bookmark {
+// HasHaveSiteWith applies the HasEdge predicate on the "have_site" edge with a given conditions (other predicates).
+func HasHaveSiteWith(preds ...predicate.Site) predicate.Bookmark {
 	return predicate.Bookmark(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.To(SiteInverseTable, FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, SiteTable, SiteColumn),
+			sqlgraph.To(HaveSiteInverseTable, FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, HaveSiteTable, HaveSiteColumn),
 		)
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
@@ -405,25 +405,53 @@ func HasSiteWith(preds ...predicate.Site) predicate.Bookmark {
 	})
 }
 
-// HasUser applies the HasEdge predicate on the "user" edge.
-func HasUser() predicate.Bookmark {
+// HasOwner applies the HasEdge predicate on the "owner" edge.
+func HasOwner() predicate.Bookmark {
 	return predicate.Bookmark(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.To(UserTable, FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, UserTable, UserColumn),
+			sqlgraph.To(OwnerTable, FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, OwnerTable, OwnerColumn),
 		)
 		sqlgraph.HasNeighbors(s, step)
 	})
 }
 
-// HasUserWith applies the HasEdge predicate on the "user" edge with a given conditions (other predicates).
-func HasUserWith(preds ...predicate.User) predicate.Bookmark {
+// HasOwnerWith applies the HasEdge predicate on the "owner" edge with a given conditions (other predicates).
+func HasOwnerWith(preds ...predicate.User) predicate.Bookmark {
 	return predicate.Bookmark(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.To(UserInverseTable, FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, UserTable, UserColumn),
+			sqlgraph.To(OwnerInverseTable, FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, OwnerTable, OwnerColumn),
+		)
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasTags applies the HasEdge predicate on the "tags" edge.
+func HasTags() predicate.Bookmark {
+	return predicate.Bookmark(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.To(TagsTable, FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, false, TagsTable, TagsPrimaryKey...),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasTagsWith applies the HasEdge predicate on the "tags" edge with a given conditions (other predicates).
+func HasTagsWith(preds ...predicate.Tag) predicate.Bookmark {
+	return predicate.Bookmark(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.To(TagsInverseTable, FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, false, TagsTable, TagsPrimaryKey...),
 		)
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {

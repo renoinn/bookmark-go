@@ -35,19 +35,22 @@ const (
 // BookmarkMutation represents an operation that mutates the Bookmark nodes in the graph.
 type BookmarkMutation struct {
 	config
-	op            Op
-	typ           string
-	id            *int
-	title         *string
-	note          *string
-	clearedFields map[string]struct{}
-	site          *int
-	clearedsite   bool
-	user          *int
-	cleareduser   bool
-	done          bool
-	oldValue      func(context.Context) (*Bookmark, error)
-	predicates    []predicate.Bookmark
+	op               Op
+	typ              string
+	id               *int
+	title            *string
+	note             *string
+	clearedFields    map[string]struct{}
+	have_site        *int
+	clearedhave_site bool
+	owner            *int
+	clearedowner     bool
+	tags             map[int]struct{}
+	removedtags      map[int]struct{}
+	clearedtags      bool
+	done             bool
+	oldValue         func(context.Context) (*Bookmark, error)
+	predicates       []predicate.Bookmark
 }
 
 var _ ent.Mutation = (*BookmarkMutation)(nil)
@@ -150,12 +153,12 @@ func (m *BookmarkMutation) IDs(ctx context.Context) ([]int, error) {
 
 // SetUserID sets the "user_id" field.
 func (m *BookmarkMutation) SetUserID(i int) {
-	m.user = &i
+	m.owner = &i
 }
 
 // UserID returns the value of the "user_id" field in the mutation.
 func (m *BookmarkMutation) UserID() (r int, exists bool) {
-	v := m.user
+	v := m.owner
 	if v == nil {
 		return
 	}
@@ -181,17 +184,17 @@ func (m *BookmarkMutation) OldUserID(ctx context.Context) (v int, err error) {
 
 // ResetUserID resets all changes to the "user_id" field.
 func (m *BookmarkMutation) ResetUserID() {
-	m.user = nil
+	m.owner = nil
 }
 
 // SetSiteID sets the "site_id" field.
 func (m *BookmarkMutation) SetSiteID(i int) {
-	m.site = &i
+	m.have_site = &i
 }
 
 // SiteID returns the value of the "site_id" field in the mutation.
 func (m *BookmarkMutation) SiteID() (r int, exists bool) {
-	v := m.site
+	v := m.have_site
 	if v == nil {
 		return
 	}
@@ -217,7 +220,7 @@ func (m *BookmarkMutation) OldSiteID(ctx context.Context) (v int, err error) {
 
 // ResetSiteID resets all changes to the "site_id" field.
 func (m *BookmarkMutation) ResetSiteID() {
-	m.site = nil
+	m.have_site = nil
 }
 
 // SetTitle sets the "title" field.
@@ -292,56 +295,136 @@ func (m *BookmarkMutation) ResetNote() {
 	m.note = nil
 }
 
-// ClearSite clears the "site" edge to the Site entity.
-func (m *BookmarkMutation) ClearSite() {
-	m.clearedsite = true
+// SetHaveSiteID sets the "have_site" edge to the Site entity by id.
+func (m *BookmarkMutation) SetHaveSiteID(id int) {
+	m.have_site = &id
 }
 
-// SiteCleared reports if the "site" edge to the Site entity was cleared.
-func (m *BookmarkMutation) SiteCleared() bool {
-	return m.clearedsite
+// ClearHaveSite clears the "have_site" edge to the Site entity.
+func (m *BookmarkMutation) ClearHaveSite() {
+	m.clearedhave_site = true
 }
 
-// SiteIDs returns the "site" edge IDs in the mutation.
+// HaveSiteCleared reports if the "have_site" edge to the Site entity was cleared.
+func (m *BookmarkMutation) HaveSiteCleared() bool {
+	return m.clearedhave_site
+}
+
+// HaveSiteID returns the "have_site" edge ID in the mutation.
+func (m *BookmarkMutation) HaveSiteID() (id int, exists bool) {
+	if m.have_site != nil {
+		return *m.have_site, true
+	}
+	return
+}
+
+// HaveSiteIDs returns the "have_site" edge IDs in the mutation.
 // Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
-// SiteID instead. It exists only for internal usage by the builders.
-func (m *BookmarkMutation) SiteIDs() (ids []int) {
-	if id := m.site; id != nil {
+// HaveSiteID instead. It exists only for internal usage by the builders.
+func (m *BookmarkMutation) HaveSiteIDs() (ids []int) {
+	if id := m.have_site; id != nil {
 		ids = append(ids, *id)
 	}
 	return
 }
 
-// ResetSite resets all changes to the "site" edge.
-func (m *BookmarkMutation) ResetSite() {
-	m.site = nil
-	m.clearedsite = false
+// ResetHaveSite resets all changes to the "have_site" edge.
+func (m *BookmarkMutation) ResetHaveSite() {
+	m.have_site = nil
+	m.clearedhave_site = false
 }
 
-// ClearUser clears the "user" edge to the User entity.
-func (m *BookmarkMutation) ClearUser() {
-	m.cleareduser = true
+// SetOwnerID sets the "owner" edge to the User entity by id.
+func (m *BookmarkMutation) SetOwnerID(id int) {
+	m.owner = &id
 }
 
-// UserCleared reports if the "user" edge to the User entity was cleared.
-func (m *BookmarkMutation) UserCleared() bool {
-	return m.cleareduser
+// ClearOwner clears the "owner" edge to the User entity.
+func (m *BookmarkMutation) ClearOwner() {
+	m.clearedowner = true
 }
 
-// UserIDs returns the "user" edge IDs in the mutation.
+// OwnerCleared reports if the "owner" edge to the User entity was cleared.
+func (m *BookmarkMutation) OwnerCleared() bool {
+	return m.clearedowner
+}
+
+// OwnerID returns the "owner" edge ID in the mutation.
+func (m *BookmarkMutation) OwnerID() (id int, exists bool) {
+	if m.owner != nil {
+		return *m.owner, true
+	}
+	return
+}
+
+// OwnerIDs returns the "owner" edge IDs in the mutation.
 // Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
-// UserID instead. It exists only for internal usage by the builders.
-func (m *BookmarkMutation) UserIDs() (ids []int) {
-	if id := m.user; id != nil {
+// OwnerID instead. It exists only for internal usage by the builders.
+func (m *BookmarkMutation) OwnerIDs() (ids []int) {
+	if id := m.owner; id != nil {
 		ids = append(ids, *id)
 	}
 	return
 }
 
-// ResetUser resets all changes to the "user" edge.
-func (m *BookmarkMutation) ResetUser() {
-	m.user = nil
-	m.cleareduser = false
+// ResetOwner resets all changes to the "owner" edge.
+func (m *BookmarkMutation) ResetOwner() {
+	m.owner = nil
+	m.clearedowner = false
+}
+
+// AddTagIDs adds the "tags" edge to the Tag entity by ids.
+func (m *BookmarkMutation) AddTagIDs(ids ...int) {
+	if m.tags == nil {
+		m.tags = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.tags[ids[i]] = struct{}{}
+	}
+}
+
+// ClearTags clears the "tags" edge to the Tag entity.
+func (m *BookmarkMutation) ClearTags() {
+	m.clearedtags = true
+}
+
+// TagsCleared reports if the "tags" edge to the Tag entity was cleared.
+func (m *BookmarkMutation) TagsCleared() bool {
+	return m.clearedtags
+}
+
+// RemoveTagIDs removes the "tags" edge to the Tag entity by IDs.
+func (m *BookmarkMutation) RemoveTagIDs(ids ...int) {
+	if m.removedtags == nil {
+		m.removedtags = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.tags, ids[i])
+		m.removedtags[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedTags returns the removed IDs of the "tags" edge to the Tag entity.
+func (m *BookmarkMutation) RemovedTagsIDs() (ids []int) {
+	for id := range m.removedtags {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// TagsIDs returns the "tags" edge IDs in the mutation.
+func (m *BookmarkMutation) TagsIDs() (ids []int) {
+	for id := range m.tags {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetTags resets all changes to the "tags" edge.
+func (m *BookmarkMutation) ResetTags() {
+	m.tags = nil
+	m.clearedtags = false
+	m.removedtags = nil
 }
 
 // Where appends a list predicates to the BookmarkMutation builder.
@@ -364,10 +447,10 @@ func (m *BookmarkMutation) Type() string {
 // AddedFields().
 func (m *BookmarkMutation) Fields() []string {
 	fields := make([]string, 0, 4)
-	if m.user != nil {
+	if m.owner != nil {
 		fields = append(fields, bookmark.FieldUserID)
 	}
-	if m.site != nil {
+	if m.have_site != nil {
 		fields = append(fields, bookmark.FieldSiteID)
 	}
 	if m.title != nil {
@@ -516,12 +599,15 @@ func (m *BookmarkMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *BookmarkMutation) AddedEdges() []string {
-	edges := make([]string, 0, 2)
-	if m.site != nil {
-		edges = append(edges, bookmark.EdgeSite)
+	edges := make([]string, 0, 3)
+	if m.have_site != nil {
+		edges = append(edges, bookmark.EdgeHaveSite)
 	}
-	if m.user != nil {
-		edges = append(edges, bookmark.EdgeUser)
+	if m.owner != nil {
+		edges = append(edges, bookmark.EdgeOwner)
+	}
+	if m.tags != nil {
+		edges = append(edges, bookmark.EdgeTags)
 	}
 	return edges
 }
@@ -530,38 +616,58 @@ func (m *BookmarkMutation) AddedEdges() []string {
 // name in this mutation.
 func (m *BookmarkMutation) AddedIDs(name string) []ent.Value {
 	switch name {
-	case bookmark.EdgeSite:
-		if id := m.site; id != nil {
+	case bookmark.EdgeHaveSite:
+		if id := m.have_site; id != nil {
 			return []ent.Value{*id}
 		}
-	case bookmark.EdgeUser:
-		if id := m.user; id != nil {
+	case bookmark.EdgeOwner:
+		if id := m.owner; id != nil {
 			return []ent.Value{*id}
 		}
+	case bookmark.EdgeTags:
+		ids := make([]ent.Value, 0, len(m.tags))
+		for id := range m.tags {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *BookmarkMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 2)
+	edges := make([]string, 0, 3)
+	if m.removedtags != nil {
+		edges = append(edges, bookmark.EdgeTags)
+	}
 	return edges
 }
 
 // RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
 // the given name in this mutation.
 func (m *BookmarkMutation) RemovedIDs(name string) []ent.Value {
+	switch name {
+	case bookmark.EdgeTags:
+		ids := make([]ent.Value, 0, len(m.removedtags))
+		for id := range m.removedtags {
+			ids = append(ids, id)
+		}
+		return ids
+	}
 	return nil
 }
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *BookmarkMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 2)
-	if m.clearedsite {
-		edges = append(edges, bookmark.EdgeSite)
+	edges := make([]string, 0, 3)
+	if m.clearedhave_site {
+		edges = append(edges, bookmark.EdgeHaveSite)
 	}
-	if m.cleareduser {
-		edges = append(edges, bookmark.EdgeUser)
+	if m.clearedowner {
+		edges = append(edges, bookmark.EdgeOwner)
+	}
+	if m.clearedtags {
+		edges = append(edges, bookmark.EdgeTags)
 	}
 	return edges
 }
@@ -570,10 +676,12 @@ func (m *BookmarkMutation) ClearedEdges() []string {
 // was cleared in this mutation.
 func (m *BookmarkMutation) EdgeCleared(name string) bool {
 	switch name {
-	case bookmark.EdgeSite:
-		return m.clearedsite
-	case bookmark.EdgeUser:
-		return m.cleareduser
+	case bookmark.EdgeHaveSite:
+		return m.clearedhave_site
+	case bookmark.EdgeOwner:
+		return m.clearedowner
+	case bookmark.EdgeTags:
+		return m.clearedtags
 	}
 	return false
 }
@@ -582,11 +690,11 @@ func (m *BookmarkMutation) EdgeCleared(name string) bool {
 // if that edge is not defined in the schema.
 func (m *BookmarkMutation) ClearEdge(name string) error {
 	switch name {
-	case bookmark.EdgeSite:
-		m.ClearSite()
+	case bookmark.EdgeHaveSite:
+		m.ClearHaveSite()
 		return nil
-	case bookmark.EdgeUser:
-		m.ClearUser()
+	case bookmark.EdgeOwner:
+		m.ClearOwner()
 		return nil
 	}
 	return fmt.Errorf("unknown Bookmark unique edge %s", name)
@@ -596,11 +704,14 @@ func (m *BookmarkMutation) ClearEdge(name string) error {
 // It returns an error if the edge is not defined in the schema.
 func (m *BookmarkMutation) ResetEdge(name string) error {
 	switch name {
-	case bookmark.EdgeSite:
-		m.ResetSite()
+	case bookmark.EdgeHaveSite:
+		m.ResetHaveSite()
 		return nil
-	case bookmark.EdgeUser:
-		m.ResetUser()
+	case bookmark.EdgeOwner:
+		m.ResetOwner()
+		return nil
+	case bookmark.EdgeTags:
+		m.ResetTags()
 		return nil
 	}
 	return fmt.Errorf("unknown Bookmark edge %s", name)
@@ -609,18 +720,18 @@ func (m *BookmarkMutation) ResetEdge(name string) error {
 // SiteMutation represents an operation that mutates the Site nodes in the graph.
 type SiteMutation struct {
 	config
-	op              Op
-	typ             string
-	id              *int
-	url             *string
-	title           *string
-	clearedFields   map[string]struct{}
-	bookmark        map[int]struct{}
-	removedbookmark map[int]struct{}
-	clearedbookmark bool
-	done            bool
-	oldValue        func(context.Context) (*Site, error)
-	predicates      []predicate.Site
+	op                   Op
+	typ                  string
+	id                   *int
+	url                  *string
+	title                *string
+	clearedFields        map[string]struct{}
+	bookmark_from        map[int]struct{}
+	removedbookmark_from map[int]struct{}
+	clearedbookmark_from bool
+	done                 bool
+	oldValue             func(context.Context) (*Site, error)
+	predicates           []predicate.Site
 }
 
 var _ ent.Mutation = (*SiteMutation)(nil)
@@ -793,58 +904,58 @@ func (m *SiteMutation) ResetTitle() {
 	m.title = nil
 }
 
-// AddBookmarkIDs adds the "bookmark" edge to the Bookmark entity by ids.
-func (m *SiteMutation) AddBookmarkIDs(ids ...int) {
-	if m.bookmark == nil {
-		m.bookmark = make(map[int]struct{})
+// AddBookmarkFromIDs adds the "bookmark_from" edge to the Bookmark entity by ids.
+func (m *SiteMutation) AddBookmarkFromIDs(ids ...int) {
+	if m.bookmark_from == nil {
+		m.bookmark_from = make(map[int]struct{})
 	}
 	for i := range ids {
-		m.bookmark[ids[i]] = struct{}{}
+		m.bookmark_from[ids[i]] = struct{}{}
 	}
 }
 
-// ClearBookmark clears the "bookmark" edge to the Bookmark entity.
-func (m *SiteMutation) ClearBookmark() {
-	m.clearedbookmark = true
+// ClearBookmarkFrom clears the "bookmark_from" edge to the Bookmark entity.
+func (m *SiteMutation) ClearBookmarkFrom() {
+	m.clearedbookmark_from = true
 }
 
-// BookmarkCleared reports if the "bookmark" edge to the Bookmark entity was cleared.
-func (m *SiteMutation) BookmarkCleared() bool {
-	return m.clearedbookmark
+// BookmarkFromCleared reports if the "bookmark_from" edge to the Bookmark entity was cleared.
+func (m *SiteMutation) BookmarkFromCleared() bool {
+	return m.clearedbookmark_from
 }
 
-// RemoveBookmarkIDs removes the "bookmark" edge to the Bookmark entity by IDs.
-func (m *SiteMutation) RemoveBookmarkIDs(ids ...int) {
-	if m.removedbookmark == nil {
-		m.removedbookmark = make(map[int]struct{})
+// RemoveBookmarkFromIDs removes the "bookmark_from" edge to the Bookmark entity by IDs.
+func (m *SiteMutation) RemoveBookmarkFromIDs(ids ...int) {
+	if m.removedbookmark_from == nil {
+		m.removedbookmark_from = make(map[int]struct{})
 	}
 	for i := range ids {
-		delete(m.bookmark, ids[i])
-		m.removedbookmark[ids[i]] = struct{}{}
+		delete(m.bookmark_from, ids[i])
+		m.removedbookmark_from[ids[i]] = struct{}{}
 	}
 }
 
-// RemovedBookmark returns the removed IDs of the "bookmark" edge to the Bookmark entity.
-func (m *SiteMutation) RemovedBookmarkIDs() (ids []int) {
-	for id := range m.removedbookmark {
+// RemovedBookmarkFrom returns the removed IDs of the "bookmark_from" edge to the Bookmark entity.
+func (m *SiteMutation) RemovedBookmarkFromIDs() (ids []int) {
+	for id := range m.removedbookmark_from {
 		ids = append(ids, id)
 	}
 	return
 }
 
-// BookmarkIDs returns the "bookmark" edge IDs in the mutation.
-func (m *SiteMutation) BookmarkIDs() (ids []int) {
-	for id := range m.bookmark {
+// BookmarkFromIDs returns the "bookmark_from" edge IDs in the mutation.
+func (m *SiteMutation) BookmarkFromIDs() (ids []int) {
+	for id := range m.bookmark_from {
 		ids = append(ids, id)
 	}
 	return
 }
 
-// ResetBookmark resets all changes to the "bookmark" edge.
-func (m *SiteMutation) ResetBookmark() {
-	m.bookmark = nil
-	m.clearedbookmark = false
-	m.removedbookmark = nil
+// ResetBookmarkFrom resets all changes to the "bookmark_from" edge.
+func (m *SiteMutation) ResetBookmarkFrom() {
+	m.bookmark_from = nil
+	m.clearedbookmark_from = false
+	m.removedbookmark_from = nil
 }
 
 // Where appends a list predicates to the SiteMutation builder.
@@ -983,8 +1094,8 @@ func (m *SiteMutation) ResetField(name string) error {
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *SiteMutation) AddedEdges() []string {
 	edges := make([]string, 0, 1)
-	if m.bookmark != nil {
-		edges = append(edges, site.EdgeBookmark)
+	if m.bookmark_from != nil {
+		edges = append(edges, site.EdgeBookmarkFrom)
 	}
 	return edges
 }
@@ -993,9 +1104,9 @@ func (m *SiteMutation) AddedEdges() []string {
 // name in this mutation.
 func (m *SiteMutation) AddedIDs(name string) []ent.Value {
 	switch name {
-	case site.EdgeBookmark:
-		ids := make([]ent.Value, 0, len(m.bookmark))
-		for id := range m.bookmark {
+	case site.EdgeBookmarkFrom:
+		ids := make([]ent.Value, 0, len(m.bookmark_from))
+		for id := range m.bookmark_from {
 			ids = append(ids, id)
 		}
 		return ids
@@ -1006,8 +1117,8 @@ func (m *SiteMutation) AddedIDs(name string) []ent.Value {
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *SiteMutation) RemovedEdges() []string {
 	edges := make([]string, 0, 1)
-	if m.removedbookmark != nil {
-		edges = append(edges, site.EdgeBookmark)
+	if m.removedbookmark_from != nil {
+		edges = append(edges, site.EdgeBookmarkFrom)
 	}
 	return edges
 }
@@ -1016,9 +1127,9 @@ func (m *SiteMutation) RemovedEdges() []string {
 // the given name in this mutation.
 func (m *SiteMutation) RemovedIDs(name string) []ent.Value {
 	switch name {
-	case site.EdgeBookmark:
-		ids := make([]ent.Value, 0, len(m.removedbookmark))
-		for id := range m.removedbookmark {
+	case site.EdgeBookmarkFrom:
+		ids := make([]ent.Value, 0, len(m.removedbookmark_from))
+		for id := range m.removedbookmark_from {
 			ids = append(ids, id)
 		}
 		return ids
@@ -1029,8 +1140,8 @@ func (m *SiteMutation) RemovedIDs(name string) []ent.Value {
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *SiteMutation) ClearedEdges() []string {
 	edges := make([]string, 0, 1)
-	if m.clearedbookmark {
-		edges = append(edges, site.EdgeBookmark)
+	if m.clearedbookmark_from {
+		edges = append(edges, site.EdgeBookmarkFrom)
 	}
 	return edges
 }
@@ -1039,8 +1150,8 @@ func (m *SiteMutation) ClearedEdges() []string {
 // was cleared in this mutation.
 func (m *SiteMutation) EdgeCleared(name string) bool {
 	switch name {
-	case site.EdgeBookmark:
-		return m.clearedbookmark
+	case site.EdgeBookmarkFrom:
+		return m.clearedbookmark_from
 	}
 	return false
 }
@@ -1057,8 +1168,8 @@ func (m *SiteMutation) ClearEdge(name string) error {
 // It returns an error if the edge is not defined in the schema.
 func (m *SiteMutation) ResetEdge(name string) error {
 	switch name {
-	case site.EdgeBookmark:
-		m.ResetBookmark()
+	case site.EdgeBookmarkFrom:
+		m.ResetBookmarkFrom()
 		return nil
 	}
 	return fmt.Errorf("unknown Site edge %s", name)
@@ -1067,20 +1178,23 @@ func (m *SiteMutation) ResetEdge(name string) error {
 // TagMutation represents an operation that mutates the Tag nodes in the graph.
 type TagMutation struct {
 	config
-	op            Op
-	typ           string
-	id            *int
-	user_id       *int
-	adduser_id    *int
-	name          *string
-	count         *int
-	addcount      *int
-	clearedFields map[string]struct{}
-	user          *int
-	cleareduser   bool
-	done          bool
-	oldValue      func(context.Context) (*Tag, error)
-	predicates    []predicate.Tag
+	op               Op
+	typ              string
+	id               *int
+	user_id          *int
+	adduser_id       *int
+	name             *string
+	count            *int
+	addcount         *int
+	clearedFields    map[string]struct{}
+	owner            *int
+	clearedowner     bool
+	bookmarks        map[int]struct{}
+	removedbookmarks map[int]struct{}
+	clearedbookmarks bool
+	done             bool
+	oldValue         func(context.Context) (*Tag, error)
+	predicates       []predicate.Tag
 }
 
 var _ ent.Mutation = (*TagMutation)(nil)
@@ -1329,43 +1443,97 @@ func (m *TagMutation) ResetCount() {
 	m.addcount = nil
 }
 
-// SetUserID sets the "user" edge to the User entity by id.
-func (m *TagMutation) SetUserID(id int) {
-	m.user = &id
+// SetOwnerID sets the "owner" edge to the User entity by id.
+func (m *TagMutation) SetOwnerID(id int) {
+	m.owner = &id
 }
 
-// ClearUser clears the "user" edge to the User entity.
-func (m *TagMutation) ClearUser() {
-	m.cleareduser = true
+// ClearOwner clears the "owner" edge to the User entity.
+func (m *TagMutation) ClearOwner() {
+	m.clearedowner = true
 }
 
-// UserCleared reports if the "user" edge to the User entity was cleared.
-func (m *TagMutation) UserCleared() bool {
-	return m.cleareduser
+// OwnerCleared reports if the "owner" edge to the User entity was cleared.
+func (m *TagMutation) OwnerCleared() bool {
+	return m.clearedowner
 }
 
-// UserID returns the "user" edge ID in the mutation.
-func (m *TagMutation) UserID() (id int, exists bool) {
-	if m.user != nil {
-		return *m.user, true
+// OwnerID returns the "owner" edge ID in the mutation.
+func (m *TagMutation) OwnerID() (id int, exists bool) {
+	if m.owner != nil {
+		return *m.owner, true
 	}
 	return
 }
 
-// UserIDs returns the "user" edge IDs in the mutation.
+// OwnerIDs returns the "owner" edge IDs in the mutation.
 // Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
-// UserID instead. It exists only for internal usage by the builders.
-func (m *TagMutation) UserIDs() (ids []int) {
-	if id := m.user; id != nil {
+// OwnerID instead. It exists only for internal usage by the builders.
+func (m *TagMutation) OwnerIDs() (ids []int) {
+	if id := m.owner; id != nil {
 		ids = append(ids, *id)
 	}
 	return
 }
 
-// ResetUser resets all changes to the "user" edge.
-func (m *TagMutation) ResetUser() {
-	m.user = nil
-	m.cleareduser = false
+// ResetOwner resets all changes to the "owner" edge.
+func (m *TagMutation) ResetOwner() {
+	m.owner = nil
+	m.clearedowner = false
+}
+
+// AddBookmarkIDs adds the "bookmarks" edge to the Bookmark entity by ids.
+func (m *TagMutation) AddBookmarkIDs(ids ...int) {
+	if m.bookmarks == nil {
+		m.bookmarks = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.bookmarks[ids[i]] = struct{}{}
+	}
+}
+
+// ClearBookmarks clears the "bookmarks" edge to the Bookmark entity.
+func (m *TagMutation) ClearBookmarks() {
+	m.clearedbookmarks = true
+}
+
+// BookmarksCleared reports if the "bookmarks" edge to the Bookmark entity was cleared.
+func (m *TagMutation) BookmarksCleared() bool {
+	return m.clearedbookmarks
+}
+
+// RemoveBookmarkIDs removes the "bookmarks" edge to the Bookmark entity by IDs.
+func (m *TagMutation) RemoveBookmarkIDs(ids ...int) {
+	if m.removedbookmarks == nil {
+		m.removedbookmarks = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.bookmarks, ids[i])
+		m.removedbookmarks[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedBookmarks returns the removed IDs of the "bookmarks" edge to the Bookmark entity.
+func (m *TagMutation) RemovedBookmarksIDs() (ids []int) {
+	for id := range m.removedbookmarks {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// BookmarksIDs returns the "bookmarks" edge IDs in the mutation.
+func (m *TagMutation) BookmarksIDs() (ids []int) {
+	for id := range m.bookmarks {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetBookmarks resets all changes to the "bookmarks" edge.
+func (m *TagMutation) ResetBookmarks() {
+	m.bookmarks = nil
+	m.clearedbookmarks = false
+	m.removedbookmarks = nil
 }
 
 // Where appends a list predicates to the TagMutation builder.
@@ -1547,9 +1715,12 @@ func (m *TagMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *TagMutation) AddedEdges() []string {
-	edges := make([]string, 0, 1)
-	if m.user != nil {
-		edges = append(edges, tag.EdgeUser)
+	edges := make([]string, 0, 2)
+	if m.owner != nil {
+		edges = append(edges, tag.EdgeOwner)
+	}
+	if m.bookmarks != nil {
+		edges = append(edges, tag.EdgeBookmarks)
 	}
 	return edges
 }
@@ -1558,31 +1729,51 @@ func (m *TagMutation) AddedEdges() []string {
 // name in this mutation.
 func (m *TagMutation) AddedIDs(name string) []ent.Value {
 	switch name {
-	case tag.EdgeUser:
-		if id := m.user; id != nil {
+	case tag.EdgeOwner:
+		if id := m.owner; id != nil {
 			return []ent.Value{*id}
 		}
+	case tag.EdgeBookmarks:
+		ids := make([]ent.Value, 0, len(m.bookmarks))
+		for id := range m.bookmarks {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *TagMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 1)
+	edges := make([]string, 0, 2)
+	if m.removedbookmarks != nil {
+		edges = append(edges, tag.EdgeBookmarks)
+	}
 	return edges
 }
 
 // RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
 // the given name in this mutation.
 func (m *TagMutation) RemovedIDs(name string) []ent.Value {
+	switch name {
+	case tag.EdgeBookmarks:
+		ids := make([]ent.Value, 0, len(m.removedbookmarks))
+		for id := range m.removedbookmarks {
+			ids = append(ids, id)
+		}
+		return ids
+	}
 	return nil
 }
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *TagMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 1)
-	if m.cleareduser {
-		edges = append(edges, tag.EdgeUser)
+	edges := make([]string, 0, 2)
+	if m.clearedowner {
+		edges = append(edges, tag.EdgeOwner)
+	}
+	if m.clearedbookmarks {
+		edges = append(edges, tag.EdgeBookmarks)
 	}
 	return edges
 }
@@ -1591,8 +1782,10 @@ func (m *TagMutation) ClearedEdges() []string {
 // was cleared in this mutation.
 func (m *TagMutation) EdgeCleared(name string) bool {
 	switch name {
-	case tag.EdgeUser:
-		return m.cleareduser
+	case tag.EdgeOwner:
+		return m.clearedowner
+	case tag.EdgeBookmarks:
+		return m.clearedbookmarks
 	}
 	return false
 }
@@ -1601,8 +1794,8 @@ func (m *TagMutation) EdgeCleared(name string) bool {
 // if that edge is not defined in the schema.
 func (m *TagMutation) ClearEdge(name string) error {
 	switch name {
-	case tag.EdgeUser:
-		m.ClearUser()
+	case tag.EdgeOwner:
+		m.ClearOwner()
 		return nil
 	}
 	return fmt.Errorf("unknown Tag unique edge %s", name)
@@ -1612,8 +1805,11 @@ func (m *TagMutation) ClearEdge(name string) error {
 // It returns an error if the edge is not defined in the schema.
 func (m *TagMutation) ResetEdge(name string) error {
 	switch name {
-	case tag.EdgeUser:
-		m.ResetUser()
+	case tag.EdgeOwner:
+		m.ResetOwner()
+		return nil
+	case tag.EdgeBookmarks:
+		m.ResetBookmarks()
 		return nil
 	}
 	return fmt.Errorf("unknown Tag edge %s", name)
@@ -1622,21 +1818,21 @@ func (m *TagMutation) ResetEdge(name string) error {
 // UserMutation represents an operation that mutates the User nodes in the graph.
 type UserMutation struct {
 	config
-	op              Op
-	typ             string
-	id              *int
-	name            *string
-	email           *string
-	clearedFields   map[string]struct{}
-	bookmark        map[int]struct{}
-	removedbookmark map[int]struct{}
-	clearedbookmark bool
-	tag             map[int]struct{}
-	removedtag      map[int]struct{}
-	clearedtag      bool
-	done            bool
-	oldValue        func(context.Context) (*User, error)
-	predicates      []predicate.User
+	op               Op
+	typ              string
+	id               *int
+	name             *string
+	email            *string
+	clearedFields    map[string]struct{}
+	bookmarks        map[int]struct{}
+	removedbookmarks map[int]struct{}
+	clearedbookmarks bool
+	tags             map[int]struct{}
+	removedtags      map[int]struct{}
+	clearedtags      bool
+	done             bool
+	oldValue         func(context.Context) (*User, error)
+	predicates       []predicate.User
 }
 
 var _ ent.Mutation = (*UserMutation)(nil)
@@ -1809,112 +2005,112 @@ func (m *UserMutation) ResetEmail() {
 	m.email = nil
 }
 
-// AddBookmarkIDs adds the "bookmark" edge to the Bookmark entity by ids.
+// AddBookmarkIDs adds the "bookmarks" edge to the Bookmark entity by ids.
 func (m *UserMutation) AddBookmarkIDs(ids ...int) {
-	if m.bookmark == nil {
-		m.bookmark = make(map[int]struct{})
+	if m.bookmarks == nil {
+		m.bookmarks = make(map[int]struct{})
 	}
 	for i := range ids {
-		m.bookmark[ids[i]] = struct{}{}
+		m.bookmarks[ids[i]] = struct{}{}
 	}
 }
 
-// ClearBookmark clears the "bookmark" edge to the Bookmark entity.
-func (m *UserMutation) ClearBookmark() {
-	m.clearedbookmark = true
+// ClearBookmarks clears the "bookmarks" edge to the Bookmark entity.
+func (m *UserMutation) ClearBookmarks() {
+	m.clearedbookmarks = true
 }
 
-// BookmarkCleared reports if the "bookmark" edge to the Bookmark entity was cleared.
-func (m *UserMutation) BookmarkCleared() bool {
-	return m.clearedbookmark
+// BookmarksCleared reports if the "bookmarks" edge to the Bookmark entity was cleared.
+func (m *UserMutation) BookmarksCleared() bool {
+	return m.clearedbookmarks
 }
 
-// RemoveBookmarkIDs removes the "bookmark" edge to the Bookmark entity by IDs.
+// RemoveBookmarkIDs removes the "bookmarks" edge to the Bookmark entity by IDs.
 func (m *UserMutation) RemoveBookmarkIDs(ids ...int) {
-	if m.removedbookmark == nil {
-		m.removedbookmark = make(map[int]struct{})
+	if m.removedbookmarks == nil {
+		m.removedbookmarks = make(map[int]struct{})
 	}
 	for i := range ids {
-		delete(m.bookmark, ids[i])
-		m.removedbookmark[ids[i]] = struct{}{}
+		delete(m.bookmarks, ids[i])
+		m.removedbookmarks[ids[i]] = struct{}{}
 	}
 }
 
-// RemovedBookmark returns the removed IDs of the "bookmark" edge to the Bookmark entity.
-func (m *UserMutation) RemovedBookmarkIDs() (ids []int) {
-	for id := range m.removedbookmark {
+// RemovedBookmarks returns the removed IDs of the "bookmarks" edge to the Bookmark entity.
+func (m *UserMutation) RemovedBookmarksIDs() (ids []int) {
+	for id := range m.removedbookmarks {
 		ids = append(ids, id)
 	}
 	return
 }
 
-// BookmarkIDs returns the "bookmark" edge IDs in the mutation.
-func (m *UserMutation) BookmarkIDs() (ids []int) {
-	for id := range m.bookmark {
+// BookmarksIDs returns the "bookmarks" edge IDs in the mutation.
+func (m *UserMutation) BookmarksIDs() (ids []int) {
+	for id := range m.bookmarks {
 		ids = append(ids, id)
 	}
 	return
 }
 
-// ResetBookmark resets all changes to the "bookmark" edge.
-func (m *UserMutation) ResetBookmark() {
-	m.bookmark = nil
-	m.clearedbookmark = false
-	m.removedbookmark = nil
+// ResetBookmarks resets all changes to the "bookmarks" edge.
+func (m *UserMutation) ResetBookmarks() {
+	m.bookmarks = nil
+	m.clearedbookmarks = false
+	m.removedbookmarks = nil
 }
 
-// AddTagIDs adds the "tag" edge to the Tag entity by ids.
+// AddTagIDs adds the "tags" edge to the Tag entity by ids.
 func (m *UserMutation) AddTagIDs(ids ...int) {
-	if m.tag == nil {
-		m.tag = make(map[int]struct{})
+	if m.tags == nil {
+		m.tags = make(map[int]struct{})
 	}
 	for i := range ids {
-		m.tag[ids[i]] = struct{}{}
+		m.tags[ids[i]] = struct{}{}
 	}
 }
 
-// ClearTag clears the "tag" edge to the Tag entity.
-func (m *UserMutation) ClearTag() {
-	m.clearedtag = true
+// ClearTags clears the "tags" edge to the Tag entity.
+func (m *UserMutation) ClearTags() {
+	m.clearedtags = true
 }
 
-// TagCleared reports if the "tag" edge to the Tag entity was cleared.
-func (m *UserMutation) TagCleared() bool {
-	return m.clearedtag
+// TagsCleared reports if the "tags" edge to the Tag entity was cleared.
+func (m *UserMutation) TagsCleared() bool {
+	return m.clearedtags
 }
 
-// RemoveTagIDs removes the "tag" edge to the Tag entity by IDs.
+// RemoveTagIDs removes the "tags" edge to the Tag entity by IDs.
 func (m *UserMutation) RemoveTagIDs(ids ...int) {
-	if m.removedtag == nil {
-		m.removedtag = make(map[int]struct{})
+	if m.removedtags == nil {
+		m.removedtags = make(map[int]struct{})
 	}
 	for i := range ids {
-		delete(m.tag, ids[i])
-		m.removedtag[ids[i]] = struct{}{}
+		delete(m.tags, ids[i])
+		m.removedtags[ids[i]] = struct{}{}
 	}
 }
 
-// RemovedTag returns the removed IDs of the "tag" edge to the Tag entity.
-func (m *UserMutation) RemovedTagIDs() (ids []int) {
-	for id := range m.removedtag {
+// RemovedTags returns the removed IDs of the "tags" edge to the Tag entity.
+func (m *UserMutation) RemovedTagsIDs() (ids []int) {
+	for id := range m.removedtags {
 		ids = append(ids, id)
 	}
 	return
 }
 
-// TagIDs returns the "tag" edge IDs in the mutation.
-func (m *UserMutation) TagIDs() (ids []int) {
-	for id := range m.tag {
+// TagsIDs returns the "tags" edge IDs in the mutation.
+func (m *UserMutation) TagsIDs() (ids []int) {
+	for id := range m.tags {
 		ids = append(ids, id)
 	}
 	return
 }
 
-// ResetTag resets all changes to the "tag" edge.
-func (m *UserMutation) ResetTag() {
-	m.tag = nil
-	m.clearedtag = false
-	m.removedtag = nil
+// ResetTags resets all changes to the "tags" edge.
+func (m *UserMutation) ResetTags() {
+	m.tags = nil
+	m.clearedtags = false
+	m.removedtags = nil
 }
 
 // Where appends a list predicates to the UserMutation builder.
@@ -2053,11 +2249,11 @@ func (m *UserMutation) ResetField(name string) error {
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *UserMutation) AddedEdges() []string {
 	edges := make([]string, 0, 2)
-	if m.bookmark != nil {
-		edges = append(edges, user.EdgeBookmark)
+	if m.bookmarks != nil {
+		edges = append(edges, user.EdgeBookmarks)
 	}
-	if m.tag != nil {
-		edges = append(edges, user.EdgeTag)
+	if m.tags != nil {
+		edges = append(edges, user.EdgeTags)
 	}
 	return edges
 }
@@ -2066,15 +2262,15 @@ func (m *UserMutation) AddedEdges() []string {
 // name in this mutation.
 func (m *UserMutation) AddedIDs(name string) []ent.Value {
 	switch name {
-	case user.EdgeBookmark:
-		ids := make([]ent.Value, 0, len(m.bookmark))
-		for id := range m.bookmark {
+	case user.EdgeBookmarks:
+		ids := make([]ent.Value, 0, len(m.bookmarks))
+		for id := range m.bookmarks {
 			ids = append(ids, id)
 		}
 		return ids
-	case user.EdgeTag:
-		ids := make([]ent.Value, 0, len(m.tag))
-		for id := range m.tag {
+	case user.EdgeTags:
+		ids := make([]ent.Value, 0, len(m.tags))
+		for id := range m.tags {
 			ids = append(ids, id)
 		}
 		return ids
@@ -2085,11 +2281,11 @@ func (m *UserMutation) AddedIDs(name string) []ent.Value {
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *UserMutation) RemovedEdges() []string {
 	edges := make([]string, 0, 2)
-	if m.removedbookmark != nil {
-		edges = append(edges, user.EdgeBookmark)
+	if m.removedbookmarks != nil {
+		edges = append(edges, user.EdgeBookmarks)
 	}
-	if m.removedtag != nil {
-		edges = append(edges, user.EdgeTag)
+	if m.removedtags != nil {
+		edges = append(edges, user.EdgeTags)
 	}
 	return edges
 }
@@ -2098,15 +2294,15 @@ func (m *UserMutation) RemovedEdges() []string {
 // the given name in this mutation.
 func (m *UserMutation) RemovedIDs(name string) []ent.Value {
 	switch name {
-	case user.EdgeBookmark:
-		ids := make([]ent.Value, 0, len(m.removedbookmark))
-		for id := range m.removedbookmark {
+	case user.EdgeBookmarks:
+		ids := make([]ent.Value, 0, len(m.removedbookmarks))
+		for id := range m.removedbookmarks {
 			ids = append(ids, id)
 		}
 		return ids
-	case user.EdgeTag:
-		ids := make([]ent.Value, 0, len(m.removedtag))
-		for id := range m.removedtag {
+	case user.EdgeTags:
+		ids := make([]ent.Value, 0, len(m.removedtags))
+		for id := range m.removedtags {
 			ids = append(ids, id)
 		}
 		return ids
@@ -2117,11 +2313,11 @@ func (m *UserMutation) RemovedIDs(name string) []ent.Value {
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *UserMutation) ClearedEdges() []string {
 	edges := make([]string, 0, 2)
-	if m.clearedbookmark {
-		edges = append(edges, user.EdgeBookmark)
+	if m.clearedbookmarks {
+		edges = append(edges, user.EdgeBookmarks)
 	}
-	if m.clearedtag {
-		edges = append(edges, user.EdgeTag)
+	if m.clearedtags {
+		edges = append(edges, user.EdgeTags)
 	}
 	return edges
 }
@@ -2130,10 +2326,10 @@ func (m *UserMutation) ClearedEdges() []string {
 // was cleared in this mutation.
 func (m *UserMutation) EdgeCleared(name string) bool {
 	switch name {
-	case user.EdgeBookmark:
-		return m.clearedbookmark
-	case user.EdgeTag:
-		return m.clearedtag
+	case user.EdgeBookmarks:
+		return m.clearedbookmarks
+	case user.EdgeTags:
+		return m.clearedtags
 	}
 	return false
 }
@@ -2150,11 +2346,11 @@ func (m *UserMutation) ClearEdge(name string) error {
 // It returns an error if the edge is not defined in the schema.
 func (m *UserMutation) ResetEdge(name string) error {
 	switch name {
-	case user.EdgeBookmark:
-		m.ResetBookmark()
+	case user.EdgeBookmarks:
+		m.ResetBookmarks()
 		return nil
-	case user.EdgeTag:
-		m.ResetTag()
+	case user.EdgeTags:
+		m.ResetTags()
 		return nil
 	}
 	return fmt.Errorf("unknown User edge %s", name)

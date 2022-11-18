@@ -11,6 +11,7 @@ import (
 	"entgo.io/ent/schema/field"
 	"github.com/renoinn/bookmark-go/datasource/ent/bookmark"
 	"github.com/renoinn/bookmark-go/datasource/ent/site"
+	"github.com/renoinn/bookmark-go/datasource/ent/tag"
 	"github.com/renoinn/bookmark-go/datasource/ent/user"
 )
 
@@ -45,14 +46,41 @@ func (bc *BookmarkCreate) SetNote(s string) *BookmarkCreate {
 	return bc
 }
 
-// SetSite sets the "site" edge to the Site entity.
-func (bc *BookmarkCreate) SetSite(s *Site) *BookmarkCreate {
-	return bc.SetSiteID(s.ID)
+// SetHaveSiteID sets the "have_site" edge to the Site entity by ID.
+func (bc *BookmarkCreate) SetHaveSiteID(id int) *BookmarkCreate {
+	bc.mutation.SetHaveSiteID(id)
+	return bc
 }
 
-// SetUser sets the "user" edge to the User entity.
-func (bc *BookmarkCreate) SetUser(u *User) *BookmarkCreate {
-	return bc.SetUserID(u.ID)
+// SetHaveSite sets the "have_site" edge to the Site entity.
+func (bc *BookmarkCreate) SetHaveSite(s *Site) *BookmarkCreate {
+	return bc.SetHaveSiteID(s.ID)
+}
+
+// SetOwnerID sets the "owner" edge to the User entity by ID.
+func (bc *BookmarkCreate) SetOwnerID(id int) *BookmarkCreate {
+	bc.mutation.SetOwnerID(id)
+	return bc
+}
+
+// SetOwner sets the "owner" edge to the User entity.
+func (bc *BookmarkCreate) SetOwner(u *User) *BookmarkCreate {
+	return bc.SetOwnerID(u.ID)
+}
+
+// AddTagIDs adds the "tags" edge to the Tag entity by IDs.
+func (bc *BookmarkCreate) AddTagIDs(ids ...int) *BookmarkCreate {
+	bc.mutation.AddTagIDs(ids...)
+	return bc
+}
+
+// AddTags adds the "tags" edges to the Tag entity.
+func (bc *BookmarkCreate) AddTags(t ...*Tag) *BookmarkCreate {
+	ids := make([]int, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
+	}
+	return bc.AddTagIDs(ids...)
 }
 
 // Mutation returns the BookmarkMutation object of the builder.
@@ -153,11 +181,11 @@ func (bc *BookmarkCreate) check() error {
 			return &ValidationError{Name: "note", err: fmt.Errorf(`ent: validator failed for field "Bookmark.note": %w`, err)}
 		}
 	}
-	if _, ok := bc.mutation.SiteID(); !ok {
-		return &ValidationError{Name: "site", err: errors.New(`ent: missing required edge "Bookmark.site"`)}
+	if _, ok := bc.mutation.HaveSiteID(); !ok {
+		return &ValidationError{Name: "have_site", err: errors.New(`ent: missing required edge "Bookmark.have_site"`)}
 	}
-	if _, ok := bc.mutation.UserID(); !ok {
-		return &ValidationError{Name: "user", err: errors.New(`ent: missing required edge "Bookmark.user"`)}
+	if _, ok := bc.mutation.OwnerID(); !ok {
+		return &ValidationError{Name: "owner", err: errors.New(`ent: missing required edge "Bookmark.owner"`)}
 	}
 	return nil
 }
@@ -194,12 +222,12 @@ func (bc *BookmarkCreate) createSpec() (*Bookmark, *sqlgraph.CreateSpec) {
 		_spec.SetField(bookmark.FieldNote, field.TypeString, value)
 		_node.Note = value
 	}
-	if nodes := bc.mutation.SiteIDs(); len(nodes) > 0 {
+	if nodes := bc.mutation.HaveSiteIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
-			Table:   bookmark.SiteTable,
-			Columns: []string{bookmark.SiteColumn},
+			Table:   bookmark.HaveSiteTable,
+			Columns: []string{bookmark.HaveSiteColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
@@ -214,12 +242,12 @@ func (bc *BookmarkCreate) createSpec() (*Bookmark, *sqlgraph.CreateSpec) {
 		_node.SiteID = nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
-	if nodes := bc.mutation.UserIDs(); len(nodes) > 0 {
+	if nodes := bc.mutation.OwnerIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
-			Table:   bookmark.UserTable,
-			Columns: []string{bookmark.UserColumn},
+			Table:   bookmark.OwnerTable,
+			Columns: []string{bookmark.OwnerColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
@@ -232,6 +260,25 @@ func (bc *BookmarkCreate) createSpec() (*Bookmark, *sqlgraph.CreateSpec) {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_node.UserID = nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := bc.mutation.TagsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   bookmark.TagsTable,
+			Columns: bookmark.TagsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: tag.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec

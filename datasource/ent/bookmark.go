@@ -32,39 +32,50 @@ type Bookmark struct {
 
 // BookmarkEdges holds the relations/edges for other nodes in the graph.
 type BookmarkEdges struct {
-	// Site holds the value of the site edge.
-	Site *Site `json:"site,omitempty"`
-	// User holds the value of the user edge.
-	User *User `json:"user,omitempty"`
+	// HaveSite holds the value of the have_site edge.
+	HaveSite *Site `json:"have_site,omitempty"`
+	// Owner holds the value of the owner edge.
+	Owner *User `json:"owner,omitempty"`
+	// Tags holds the value of the tags edge.
+	Tags []*Tag `json:"tags,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [2]bool
+	loadedTypes [3]bool
 }
 
-// SiteOrErr returns the Site value or an error if the edge
+// HaveSiteOrErr returns the HaveSite value or an error if the edge
 // was not loaded in eager-loading, or loaded but was not found.
-func (e BookmarkEdges) SiteOrErr() (*Site, error) {
+func (e BookmarkEdges) HaveSiteOrErr() (*Site, error) {
 	if e.loadedTypes[0] {
-		if e.Site == nil {
+		if e.HaveSite == nil {
 			// Edge was loaded but was not found.
 			return nil, &NotFoundError{label: site.Label}
 		}
-		return e.Site, nil
+		return e.HaveSite, nil
 	}
-	return nil, &NotLoadedError{edge: "site"}
+	return nil, &NotLoadedError{edge: "have_site"}
 }
 
-// UserOrErr returns the User value or an error if the edge
+// OwnerOrErr returns the Owner value or an error if the edge
 // was not loaded in eager-loading, or loaded but was not found.
-func (e BookmarkEdges) UserOrErr() (*User, error) {
+func (e BookmarkEdges) OwnerOrErr() (*User, error) {
 	if e.loadedTypes[1] {
-		if e.User == nil {
+		if e.Owner == nil {
 			// Edge was loaded but was not found.
 			return nil, &NotFoundError{label: user.Label}
 		}
-		return e.User, nil
+		return e.Owner, nil
 	}
-	return nil, &NotLoadedError{edge: "user"}
+	return nil, &NotLoadedError{edge: "owner"}
+}
+
+// TagsOrErr returns the Tags value or an error if the edge
+// was not loaded in eager-loading.
+func (e BookmarkEdges) TagsOrErr() ([]*Tag, error) {
+	if e.loadedTypes[2] {
+		return e.Tags, nil
+	}
+	return nil, &NotLoadedError{edge: "tags"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -126,14 +137,19 @@ func (b *Bookmark) assignValues(columns []string, values []any) error {
 	return nil
 }
 
-// QuerySite queries the "site" edge of the Bookmark entity.
-func (b *Bookmark) QuerySite() *SiteQuery {
-	return (&BookmarkClient{config: b.config}).QuerySite(b)
+// QueryHaveSite queries the "have_site" edge of the Bookmark entity.
+func (b *Bookmark) QueryHaveSite() *SiteQuery {
+	return (&BookmarkClient{config: b.config}).QueryHaveSite(b)
 }
 
-// QueryUser queries the "user" edge of the Bookmark entity.
-func (b *Bookmark) QueryUser() *UserQuery {
-	return (&BookmarkClient{config: b.config}).QueryUser(b)
+// QueryOwner queries the "owner" edge of the Bookmark entity.
+func (b *Bookmark) QueryOwner() *UserQuery {
+	return (&BookmarkClient{config: b.config}).QueryOwner(b)
+}
+
+// QueryTags queries the "tags" edge of the Bookmark entity.
+func (b *Bookmark) QueryTags() *TagQuery {
+	return (&BookmarkClient{config: b.config}).QueryTags(b)
 }
 
 // Update returns a builder for updating this Bookmark.

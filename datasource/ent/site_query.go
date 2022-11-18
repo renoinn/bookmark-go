@@ -19,13 +19,13 @@ import (
 // SiteQuery is the builder for querying Site entities.
 type SiteQuery struct {
 	config
-	limit        *int
-	offset       *int
-	unique       *bool
-	order        []OrderFunc
-	fields       []string
-	predicates   []predicate.Site
-	withBookmark *BookmarkQuery
+	limit            *int
+	offset           *int
+	unique           *bool
+	order            []OrderFunc
+	fields           []string
+	predicates       []predicate.Site
+	withBookmarkFrom *BookmarkQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -62,8 +62,8 @@ func (sq *SiteQuery) Order(o ...OrderFunc) *SiteQuery {
 	return sq
 }
 
-// QueryBookmark chains the current query on the "bookmark" edge.
-func (sq *SiteQuery) QueryBookmark() *BookmarkQuery {
+// QueryBookmarkFrom chains the current query on the "bookmark_from" edge.
+func (sq *SiteQuery) QueryBookmarkFrom() *BookmarkQuery {
 	query := &BookmarkQuery{config: sq.config}
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
 		if err := sq.prepareQuery(ctx); err != nil {
@@ -76,7 +76,7 @@ func (sq *SiteQuery) QueryBookmark() *BookmarkQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(site.Table, site.FieldID, selector),
 			sqlgraph.To(bookmark.Table, bookmark.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, site.BookmarkTable, site.BookmarkColumn),
+			sqlgraph.Edge(sqlgraph.O2M, false, site.BookmarkFromTable, site.BookmarkFromColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(sq.driver.Dialect(), step)
 		return fromU, nil
@@ -260,12 +260,12 @@ func (sq *SiteQuery) Clone() *SiteQuery {
 		return nil
 	}
 	return &SiteQuery{
-		config:       sq.config,
-		limit:        sq.limit,
-		offset:       sq.offset,
-		order:        append([]OrderFunc{}, sq.order...),
-		predicates:   append([]predicate.Site{}, sq.predicates...),
-		withBookmark: sq.withBookmark.Clone(),
+		config:           sq.config,
+		limit:            sq.limit,
+		offset:           sq.offset,
+		order:            append([]OrderFunc{}, sq.order...),
+		predicates:       append([]predicate.Site{}, sq.predicates...),
+		withBookmarkFrom: sq.withBookmarkFrom.Clone(),
 		// clone intermediate query.
 		sql:    sq.sql.Clone(),
 		path:   sq.path,
@@ -273,14 +273,14 @@ func (sq *SiteQuery) Clone() *SiteQuery {
 	}
 }
 
-// WithBookmark tells the query-builder to eager-load the nodes that are connected to
-// the "bookmark" edge. The optional arguments are used to configure the query builder of the edge.
-func (sq *SiteQuery) WithBookmark(opts ...func(*BookmarkQuery)) *SiteQuery {
+// WithBookmarkFrom tells the query-builder to eager-load the nodes that are connected to
+// the "bookmark_from" edge. The optional arguments are used to configure the query builder of the edge.
+func (sq *SiteQuery) WithBookmarkFrom(opts ...func(*BookmarkQuery)) *SiteQuery {
 	query := &BookmarkQuery{config: sq.config}
 	for _, opt := range opts {
 		opt(query)
 	}
-	sq.withBookmark = query
+	sq.withBookmarkFrom = query
 	return sq
 }
 
@@ -358,7 +358,7 @@ func (sq *SiteQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Site, e
 		nodes       = []*Site{}
 		_spec       = sq.querySpec()
 		loadedTypes = [1]bool{
-			sq.withBookmark != nil,
+			sq.withBookmarkFrom != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
@@ -379,17 +379,17 @@ func (sq *SiteQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Site, e
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
-	if query := sq.withBookmark; query != nil {
-		if err := sq.loadBookmark(ctx, query, nodes,
-			func(n *Site) { n.Edges.Bookmark = []*Bookmark{} },
-			func(n *Site, e *Bookmark) { n.Edges.Bookmark = append(n.Edges.Bookmark, e) }); err != nil {
+	if query := sq.withBookmarkFrom; query != nil {
+		if err := sq.loadBookmarkFrom(ctx, query, nodes,
+			func(n *Site) { n.Edges.BookmarkFrom = []*Bookmark{} },
+			func(n *Site, e *Bookmark) { n.Edges.BookmarkFrom = append(n.Edges.BookmarkFrom, e) }); err != nil {
 			return nil, err
 		}
 	}
 	return nodes, nil
 }
 
-func (sq *SiteQuery) loadBookmark(ctx context.Context, query *BookmarkQuery, nodes []*Site, init func(*Site), assign func(*Site, *Bookmark)) error {
+func (sq *SiteQuery) loadBookmarkFrom(ctx context.Context, query *BookmarkQuery, nodes []*Site, init func(*Site), assign func(*Site, *Bookmark)) error {
 	fks := make([]driver.Value, 0, len(nodes))
 	nodeids := make(map[int]*Site)
 	for i := range nodes {
@@ -400,7 +400,7 @@ func (sq *SiteQuery) loadBookmark(ctx context.Context, query *BookmarkQuery, nod
 		}
 	}
 	query.Where(predicate.Bookmark(func(s *sql.Selector) {
-		s.Where(sql.InValues(site.BookmarkColumn, fks...))
+		s.Where(sql.InValues(site.BookmarkFromColumn, fks...))
 	}))
 	neighbors, err := query.All(ctx)
 	if err != nil {

@@ -13,6 +13,7 @@ import (
 	"github.com/renoinn/bookmark-go/datasource/ent/bookmark"
 	"github.com/renoinn/bookmark-go/datasource/ent/predicate"
 	"github.com/renoinn/bookmark-go/datasource/ent/site"
+	"github.com/renoinn/bookmark-go/datasource/ent/tag"
 	"github.com/renoinn/bookmark-go/datasource/ent/user"
 )
 
@@ -53,14 +54,41 @@ func (bu *BookmarkUpdate) SetNote(s string) *BookmarkUpdate {
 	return bu
 }
 
-// SetSite sets the "site" edge to the Site entity.
-func (bu *BookmarkUpdate) SetSite(s *Site) *BookmarkUpdate {
-	return bu.SetSiteID(s.ID)
+// SetHaveSiteID sets the "have_site" edge to the Site entity by ID.
+func (bu *BookmarkUpdate) SetHaveSiteID(id int) *BookmarkUpdate {
+	bu.mutation.SetHaveSiteID(id)
+	return bu
 }
 
-// SetUser sets the "user" edge to the User entity.
-func (bu *BookmarkUpdate) SetUser(u *User) *BookmarkUpdate {
-	return bu.SetUserID(u.ID)
+// SetHaveSite sets the "have_site" edge to the Site entity.
+func (bu *BookmarkUpdate) SetHaveSite(s *Site) *BookmarkUpdate {
+	return bu.SetHaveSiteID(s.ID)
+}
+
+// SetOwnerID sets the "owner" edge to the User entity by ID.
+func (bu *BookmarkUpdate) SetOwnerID(id int) *BookmarkUpdate {
+	bu.mutation.SetOwnerID(id)
+	return bu
+}
+
+// SetOwner sets the "owner" edge to the User entity.
+func (bu *BookmarkUpdate) SetOwner(u *User) *BookmarkUpdate {
+	return bu.SetOwnerID(u.ID)
+}
+
+// AddTagIDs adds the "tags" edge to the Tag entity by IDs.
+func (bu *BookmarkUpdate) AddTagIDs(ids ...int) *BookmarkUpdate {
+	bu.mutation.AddTagIDs(ids...)
+	return bu
+}
+
+// AddTags adds the "tags" edges to the Tag entity.
+func (bu *BookmarkUpdate) AddTags(t ...*Tag) *BookmarkUpdate {
+	ids := make([]int, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
+	}
+	return bu.AddTagIDs(ids...)
 }
 
 // Mutation returns the BookmarkMutation object of the builder.
@@ -68,16 +96,37 @@ func (bu *BookmarkUpdate) Mutation() *BookmarkMutation {
 	return bu.mutation
 }
 
-// ClearSite clears the "site" edge to the Site entity.
-func (bu *BookmarkUpdate) ClearSite() *BookmarkUpdate {
-	bu.mutation.ClearSite()
+// ClearHaveSite clears the "have_site" edge to the Site entity.
+func (bu *BookmarkUpdate) ClearHaveSite() *BookmarkUpdate {
+	bu.mutation.ClearHaveSite()
 	return bu
 }
 
-// ClearUser clears the "user" edge to the User entity.
-func (bu *BookmarkUpdate) ClearUser() *BookmarkUpdate {
-	bu.mutation.ClearUser()
+// ClearOwner clears the "owner" edge to the User entity.
+func (bu *BookmarkUpdate) ClearOwner() *BookmarkUpdate {
+	bu.mutation.ClearOwner()
 	return bu
+}
+
+// ClearTags clears all "tags" edges to the Tag entity.
+func (bu *BookmarkUpdate) ClearTags() *BookmarkUpdate {
+	bu.mutation.ClearTags()
+	return bu
+}
+
+// RemoveTagIDs removes the "tags" edge to Tag entities by IDs.
+func (bu *BookmarkUpdate) RemoveTagIDs(ids ...int) *BookmarkUpdate {
+	bu.mutation.RemoveTagIDs(ids...)
+	return bu
+}
+
+// RemoveTags removes "tags" edges to Tag entities.
+func (bu *BookmarkUpdate) RemoveTags(t ...*Tag) *BookmarkUpdate {
+	ids := make([]int, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
+	}
+	return bu.RemoveTagIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -152,11 +201,11 @@ func (bu *BookmarkUpdate) check() error {
 			return &ValidationError{Name: "note", err: fmt.Errorf(`ent: validator failed for field "Bookmark.note": %w`, err)}
 		}
 	}
-	if _, ok := bu.mutation.SiteID(); bu.mutation.SiteCleared() && !ok {
-		return errors.New(`ent: clearing a required unique edge "Bookmark.site"`)
+	if _, ok := bu.mutation.HaveSiteID(); bu.mutation.HaveSiteCleared() && !ok {
+		return errors.New(`ent: clearing a required unique edge "Bookmark.have_site"`)
 	}
-	if _, ok := bu.mutation.UserID(); bu.mutation.UserCleared() && !ok {
-		return errors.New(`ent: clearing a required unique edge "Bookmark.user"`)
+	if _, ok := bu.mutation.OwnerID(); bu.mutation.OwnerCleared() && !ok {
+		return errors.New(`ent: clearing a required unique edge "Bookmark.owner"`)
 	}
 	return nil
 }
@@ -185,12 +234,12 @@ func (bu *BookmarkUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value, ok := bu.mutation.Note(); ok {
 		_spec.SetField(bookmark.FieldNote, field.TypeString, value)
 	}
-	if bu.mutation.SiteCleared() {
+	if bu.mutation.HaveSiteCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
-			Table:   bookmark.SiteTable,
-			Columns: []string{bookmark.SiteColumn},
+			Table:   bookmark.HaveSiteTable,
+			Columns: []string{bookmark.HaveSiteColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
@@ -201,12 +250,12 @@ func (bu *BookmarkUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := bu.mutation.SiteIDs(); len(nodes) > 0 {
+	if nodes := bu.mutation.HaveSiteIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
-			Table:   bookmark.SiteTable,
-			Columns: []string{bookmark.SiteColumn},
+			Table:   bookmark.HaveSiteTable,
+			Columns: []string{bookmark.HaveSiteColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
@@ -220,12 +269,12 @@ func (bu *BookmarkUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if bu.mutation.UserCleared() {
+	if bu.mutation.OwnerCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
-			Table:   bookmark.UserTable,
-			Columns: []string{bookmark.UserColumn},
+			Table:   bookmark.OwnerTable,
+			Columns: []string{bookmark.OwnerColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
@@ -236,17 +285,71 @@ func (bu *BookmarkUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := bu.mutation.UserIDs(); len(nodes) > 0 {
+	if nodes := bu.mutation.OwnerIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
-			Table:   bookmark.UserTable,
-			Columns: []string{bookmark.UserColumn},
+			Table:   bookmark.OwnerTable,
+			Columns: []string{bookmark.OwnerColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
 					Type:   field.TypeInt,
 					Column: user.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if bu.mutation.TagsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   bookmark.TagsTable,
+			Columns: bookmark.TagsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: tag.FieldID,
+				},
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := bu.mutation.RemovedTagsIDs(); len(nodes) > 0 && !bu.mutation.TagsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   bookmark.TagsTable,
+			Columns: bookmark.TagsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: tag.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := bu.mutation.TagsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   bookmark.TagsTable,
+			Columns: bookmark.TagsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: tag.FieldID,
 				},
 			},
 		}
@@ -298,14 +401,41 @@ func (buo *BookmarkUpdateOne) SetNote(s string) *BookmarkUpdateOne {
 	return buo
 }
 
-// SetSite sets the "site" edge to the Site entity.
-func (buo *BookmarkUpdateOne) SetSite(s *Site) *BookmarkUpdateOne {
-	return buo.SetSiteID(s.ID)
+// SetHaveSiteID sets the "have_site" edge to the Site entity by ID.
+func (buo *BookmarkUpdateOne) SetHaveSiteID(id int) *BookmarkUpdateOne {
+	buo.mutation.SetHaveSiteID(id)
+	return buo
 }
 
-// SetUser sets the "user" edge to the User entity.
-func (buo *BookmarkUpdateOne) SetUser(u *User) *BookmarkUpdateOne {
-	return buo.SetUserID(u.ID)
+// SetHaveSite sets the "have_site" edge to the Site entity.
+func (buo *BookmarkUpdateOne) SetHaveSite(s *Site) *BookmarkUpdateOne {
+	return buo.SetHaveSiteID(s.ID)
+}
+
+// SetOwnerID sets the "owner" edge to the User entity by ID.
+func (buo *BookmarkUpdateOne) SetOwnerID(id int) *BookmarkUpdateOne {
+	buo.mutation.SetOwnerID(id)
+	return buo
+}
+
+// SetOwner sets the "owner" edge to the User entity.
+func (buo *BookmarkUpdateOne) SetOwner(u *User) *BookmarkUpdateOne {
+	return buo.SetOwnerID(u.ID)
+}
+
+// AddTagIDs adds the "tags" edge to the Tag entity by IDs.
+func (buo *BookmarkUpdateOne) AddTagIDs(ids ...int) *BookmarkUpdateOne {
+	buo.mutation.AddTagIDs(ids...)
+	return buo
+}
+
+// AddTags adds the "tags" edges to the Tag entity.
+func (buo *BookmarkUpdateOne) AddTags(t ...*Tag) *BookmarkUpdateOne {
+	ids := make([]int, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
+	}
+	return buo.AddTagIDs(ids...)
 }
 
 // Mutation returns the BookmarkMutation object of the builder.
@@ -313,16 +443,37 @@ func (buo *BookmarkUpdateOne) Mutation() *BookmarkMutation {
 	return buo.mutation
 }
 
-// ClearSite clears the "site" edge to the Site entity.
-func (buo *BookmarkUpdateOne) ClearSite() *BookmarkUpdateOne {
-	buo.mutation.ClearSite()
+// ClearHaveSite clears the "have_site" edge to the Site entity.
+func (buo *BookmarkUpdateOne) ClearHaveSite() *BookmarkUpdateOne {
+	buo.mutation.ClearHaveSite()
 	return buo
 }
 
-// ClearUser clears the "user" edge to the User entity.
-func (buo *BookmarkUpdateOne) ClearUser() *BookmarkUpdateOne {
-	buo.mutation.ClearUser()
+// ClearOwner clears the "owner" edge to the User entity.
+func (buo *BookmarkUpdateOne) ClearOwner() *BookmarkUpdateOne {
+	buo.mutation.ClearOwner()
 	return buo
+}
+
+// ClearTags clears all "tags" edges to the Tag entity.
+func (buo *BookmarkUpdateOne) ClearTags() *BookmarkUpdateOne {
+	buo.mutation.ClearTags()
+	return buo
+}
+
+// RemoveTagIDs removes the "tags" edge to Tag entities by IDs.
+func (buo *BookmarkUpdateOne) RemoveTagIDs(ids ...int) *BookmarkUpdateOne {
+	buo.mutation.RemoveTagIDs(ids...)
+	return buo
+}
+
+// RemoveTags removes "tags" edges to Tag entities.
+func (buo *BookmarkUpdateOne) RemoveTags(t ...*Tag) *BookmarkUpdateOne {
+	ids := make([]int, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
+	}
+	return buo.RemoveTagIDs(ids...)
 }
 
 // Select allows selecting one or more fields (columns) of the returned entity.
@@ -410,11 +561,11 @@ func (buo *BookmarkUpdateOne) check() error {
 			return &ValidationError{Name: "note", err: fmt.Errorf(`ent: validator failed for field "Bookmark.note": %w`, err)}
 		}
 	}
-	if _, ok := buo.mutation.SiteID(); buo.mutation.SiteCleared() && !ok {
-		return errors.New(`ent: clearing a required unique edge "Bookmark.site"`)
+	if _, ok := buo.mutation.HaveSiteID(); buo.mutation.HaveSiteCleared() && !ok {
+		return errors.New(`ent: clearing a required unique edge "Bookmark.have_site"`)
 	}
-	if _, ok := buo.mutation.UserID(); buo.mutation.UserCleared() && !ok {
-		return errors.New(`ent: clearing a required unique edge "Bookmark.user"`)
+	if _, ok := buo.mutation.OwnerID(); buo.mutation.OwnerCleared() && !ok {
+		return errors.New(`ent: clearing a required unique edge "Bookmark.owner"`)
 	}
 	return nil
 }
@@ -460,12 +611,12 @@ func (buo *BookmarkUpdateOne) sqlSave(ctx context.Context) (_node *Bookmark, err
 	if value, ok := buo.mutation.Note(); ok {
 		_spec.SetField(bookmark.FieldNote, field.TypeString, value)
 	}
-	if buo.mutation.SiteCleared() {
+	if buo.mutation.HaveSiteCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
-			Table:   bookmark.SiteTable,
-			Columns: []string{bookmark.SiteColumn},
+			Table:   bookmark.HaveSiteTable,
+			Columns: []string{bookmark.HaveSiteColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
@@ -476,12 +627,12 @@ func (buo *BookmarkUpdateOne) sqlSave(ctx context.Context) (_node *Bookmark, err
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := buo.mutation.SiteIDs(); len(nodes) > 0 {
+	if nodes := buo.mutation.HaveSiteIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
-			Table:   bookmark.SiteTable,
-			Columns: []string{bookmark.SiteColumn},
+			Table:   bookmark.HaveSiteTable,
+			Columns: []string{bookmark.HaveSiteColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
@@ -495,12 +646,12 @@ func (buo *BookmarkUpdateOne) sqlSave(ctx context.Context) (_node *Bookmark, err
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if buo.mutation.UserCleared() {
+	if buo.mutation.OwnerCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
-			Table:   bookmark.UserTable,
-			Columns: []string{bookmark.UserColumn},
+			Table:   bookmark.OwnerTable,
+			Columns: []string{bookmark.OwnerColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
@@ -511,17 +662,71 @@ func (buo *BookmarkUpdateOne) sqlSave(ctx context.Context) (_node *Bookmark, err
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := buo.mutation.UserIDs(); len(nodes) > 0 {
+	if nodes := buo.mutation.OwnerIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
-			Table:   bookmark.UserTable,
-			Columns: []string{bookmark.UserColumn},
+			Table:   bookmark.OwnerTable,
+			Columns: []string{bookmark.OwnerColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
 					Type:   field.TypeInt,
 					Column: user.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if buo.mutation.TagsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   bookmark.TagsTable,
+			Columns: bookmark.TagsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: tag.FieldID,
+				},
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := buo.mutation.RemovedTagsIDs(); len(nodes) > 0 && !buo.mutation.TagsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   bookmark.TagsTable,
+			Columns: bookmark.TagsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: tag.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := buo.mutation.TagsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   bookmark.TagsTable,
+			Columns: bookmark.TagsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: tag.FieldID,
 				},
 			},
 		}

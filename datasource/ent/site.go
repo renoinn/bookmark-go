@@ -26,20 +26,20 @@ type Site struct {
 
 // SiteEdges holds the relations/edges for other nodes in the graph.
 type SiteEdges struct {
-	// Bookmark holds the value of the bookmark edge.
-	Bookmark []*Bookmark `json:"bookmark,omitempty"`
+	// BookmarkFrom holds the value of the bookmark_from edge.
+	BookmarkFrom []*Bookmark `json:"bookmark_from,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
 	loadedTypes [1]bool
 }
 
-// BookmarkOrErr returns the Bookmark value or an error if the edge
+// BookmarkFromOrErr returns the BookmarkFrom value or an error if the edge
 // was not loaded in eager-loading.
-func (e SiteEdges) BookmarkOrErr() ([]*Bookmark, error) {
+func (e SiteEdges) BookmarkFromOrErr() ([]*Bookmark, error) {
 	if e.loadedTypes[0] {
-		return e.Bookmark, nil
+		return e.BookmarkFrom, nil
 	}
-	return nil, &NotLoadedError{edge: "bookmark"}
+	return nil, &NotLoadedError{edge: "bookmark_from"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -89,9 +89,9 @@ func (s *Site) assignValues(columns []string, values []any) error {
 	return nil
 }
 
-// QueryBookmark queries the "bookmark" edge of the Site entity.
-func (s *Site) QueryBookmark() *BookmarkQuery {
-	return (&SiteClient{config: s.config}).QueryBookmark(s)
+// QueryBookmarkFrom queries the "bookmark_from" edge of the Site entity.
+func (s *Site) QueryBookmarkFrom() *BookmarkQuery {
+	return (&SiteClient{config: s.config}).QueryBookmarkFrom(s)
 }
 
 // Update returns a builder for updating this Site.

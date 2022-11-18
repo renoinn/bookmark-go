@@ -4,12 +4,14 @@ package ent
 
 import (
 	"context"
+	"database/sql/driver"
 	"fmt"
 	"math"
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/renoinn/bookmark-go/datasource/ent/bookmark"
 	"github.com/renoinn/bookmark-go/datasource/ent/predicate"
 	"github.com/renoinn/bookmark-go/datasource/ent/tag"
 	"github.com/renoinn/bookmark-go/datasource/ent/user"
@@ -18,14 +20,15 @@ import (
 // TagQuery is the builder for querying Tag entities.
 type TagQuery struct {
 	config
-	limit      *int
-	offset     *int
-	unique     *bool
-	order      []OrderFunc
-	fields     []string
-	predicates []predicate.Tag
-	withUser   *UserQuery
-	withFKs    bool
+	limit         *int
+	offset        *int
+	unique        *bool
+	order         []OrderFunc
+	fields        []string
+	predicates    []predicate.Tag
+	withOwner     *UserQuery
+	withBookmarks *BookmarkQuery
+	withFKs       bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -62,8 +65,8 @@ func (tq *TagQuery) Order(o ...OrderFunc) *TagQuery {
 	return tq
 }
 
-// QueryUser chains the current query on the "user" edge.
-func (tq *TagQuery) QueryUser() *UserQuery {
+// QueryOwner chains the current query on the "owner" edge.
+func (tq *TagQuery) QueryOwner() *UserQuery {
 	query := &UserQuery{config: tq.config}
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
 		if err := tq.prepareQuery(ctx); err != nil {
@@ -76,7 +79,29 @@ func (tq *TagQuery) QueryUser() *UserQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(tag.Table, tag.FieldID, selector),
 			sqlgraph.To(user.Table, user.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, tag.UserTable, tag.UserColumn),
+			sqlgraph.Edge(sqlgraph.M2O, true, tag.OwnerTable, tag.OwnerColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(tq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryBookmarks chains the current query on the "bookmarks" edge.
+func (tq *TagQuery) QueryBookmarks() *BookmarkQuery {
+	query := &BookmarkQuery{config: tq.config}
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := tq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := tq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(tag.Table, tag.FieldID, selector),
+			sqlgraph.To(bookmark.Table, bookmark.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, true, tag.BookmarksTable, tag.BookmarksPrimaryKey...),
 		)
 		fromU = sqlgraph.SetNeighbors(tq.driver.Dialect(), step)
 		return fromU, nil
@@ -260,12 +285,13 @@ func (tq *TagQuery) Clone() *TagQuery {
 		return nil
 	}
 	return &TagQuery{
-		config:     tq.config,
-		limit:      tq.limit,
-		offset:     tq.offset,
-		order:      append([]OrderFunc{}, tq.order...),
-		predicates: append([]predicate.Tag{}, tq.predicates...),
-		withUser:   tq.withUser.Clone(),
+		config:        tq.config,
+		limit:         tq.limit,
+		offset:        tq.offset,
+		order:         append([]OrderFunc{}, tq.order...),
+		predicates:    append([]predicate.Tag{}, tq.predicates...),
+		withOwner:     tq.withOwner.Clone(),
+		withBookmarks: tq.withBookmarks.Clone(),
 		// clone intermediate query.
 		sql:    tq.sql.Clone(),
 		path:   tq.path,
@@ -273,14 +299,25 @@ func (tq *TagQuery) Clone() *TagQuery {
 	}
 }
 
-// WithUser tells the query-builder to eager-load the nodes that are connected to
-// the "user" edge. The optional arguments are used to configure the query builder of the edge.
-func (tq *TagQuery) WithUser(opts ...func(*UserQuery)) *TagQuery {
+// WithOwner tells the query-builder to eager-load the nodes that are connected to
+// the "owner" edge. The optional arguments are used to configure the query builder of the edge.
+func (tq *TagQuery) WithOwner(opts ...func(*UserQuery)) *TagQuery {
 	query := &UserQuery{config: tq.config}
 	for _, opt := range opts {
 		opt(query)
 	}
-	tq.withUser = query
+	tq.withOwner = query
+	return tq
+}
+
+// WithBookmarks tells the query-builder to eager-load the nodes that are connected to
+// the "bookmarks" edge. The optional arguments are used to configure the query builder of the edge.
+func (tq *TagQuery) WithBookmarks(opts ...func(*BookmarkQuery)) *TagQuery {
+	query := &BookmarkQuery{config: tq.config}
+	for _, opt := range opts {
+		opt(query)
+	}
+	tq.withBookmarks = query
 	return tq
 }
 
@@ -358,11 +395,12 @@ func (tq *TagQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Tag, err
 		nodes       = []*Tag{}
 		withFKs     = tq.withFKs
 		_spec       = tq.querySpec()
-		loadedTypes = [1]bool{
-			tq.withUser != nil,
+		loadedTypes = [2]bool{
+			tq.withOwner != nil,
+			tq.withBookmarks != nil,
 		}
 	)
-	if tq.withUser != nil {
+	if tq.withOwner != nil {
 		withFKs = true
 	}
 	if withFKs {
@@ -386,23 +424,30 @@ func (tq *TagQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Tag, err
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
-	if query := tq.withUser; query != nil {
-		if err := tq.loadUser(ctx, query, nodes, nil,
-			func(n *Tag, e *User) { n.Edges.User = e }); err != nil {
+	if query := tq.withOwner; query != nil {
+		if err := tq.loadOwner(ctx, query, nodes, nil,
+			func(n *Tag, e *User) { n.Edges.Owner = e }); err != nil {
+			return nil, err
+		}
+	}
+	if query := tq.withBookmarks; query != nil {
+		if err := tq.loadBookmarks(ctx, query, nodes,
+			func(n *Tag) { n.Edges.Bookmarks = []*Bookmark{} },
+			func(n *Tag, e *Bookmark) { n.Edges.Bookmarks = append(n.Edges.Bookmarks, e) }); err != nil {
 			return nil, err
 		}
 	}
 	return nodes, nil
 }
 
-func (tq *TagQuery) loadUser(ctx context.Context, query *UserQuery, nodes []*Tag, init func(*Tag), assign func(*Tag, *User)) error {
+func (tq *TagQuery) loadOwner(ctx context.Context, query *UserQuery, nodes []*Tag, init func(*Tag), assign func(*Tag, *User)) error {
 	ids := make([]int, 0, len(nodes))
 	nodeids := make(map[int][]*Tag)
 	for i := range nodes {
-		if nodes[i].user_tag == nil {
+		if nodes[i].user_tags == nil {
 			continue
 		}
-		fk := *nodes[i].user_tag
+		fk := *nodes[i].user_tags
 		if _, ok := nodeids[fk]; !ok {
 			ids = append(ids, fk)
 		}
@@ -416,10 +461,68 @@ func (tq *TagQuery) loadUser(ctx context.Context, query *UserQuery, nodes []*Tag
 	for _, n := range neighbors {
 		nodes, ok := nodeids[n.ID]
 		if !ok {
-			return fmt.Errorf(`unexpected foreign-key "user_tag" returned %v`, n.ID)
+			return fmt.Errorf(`unexpected foreign-key "user_tags" returned %v`, n.ID)
 		}
 		for i := range nodes {
 			assign(nodes[i], n)
+		}
+	}
+	return nil
+}
+func (tq *TagQuery) loadBookmarks(ctx context.Context, query *BookmarkQuery, nodes []*Tag, init func(*Tag), assign func(*Tag, *Bookmark)) error {
+	edgeIDs := make([]driver.Value, len(nodes))
+	byID := make(map[int]*Tag)
+	nids := make(map[int]map[*Tag]struct{})
+	for i, node := range nodes {
+		edgeIDs[i] = node.ID
+		byID[node.ID] = node
+		if init != nil {
+			init(node)
+		}
+	}
+	query.Where(func(s *sql.Selector) {
+		joinT := sql.Table(tag.BookmarksTable)
+		s.Join(joinT).On(s.C(bookmark.FieldID), joinT.C(tag.BookmarksPrimaryKey[0]))
+		s.Where(sql.InValues(joinT.C(tag.BookmarksPrimaryKey[1]), edgeIDs...))
+		columns := s.SelectedColumns()
+		s.Select(joinT.C(tag.BookmarksPrimaryKey[1]))
+		s.AppendSelect(columns...)
+		s.SetDistinct(false)
+	})
+	if err := query.prepareQuery(ctx); err != nil {
+		return err
+	}
+	neighbors, err := query.sqlAll(ctx, func(_ context.Context, spec *sqlgraph.QuerySpec) {
+		assign := spec.Assign
+		values := spec.ScanValues
+		spec.ScanValues = func(columns []string) ([]any, error) {
+			values, err := values(columns[1:])
+			if err != nil {
+				return nil, err
+			}
+			return append([]any{new(sql.NullInt64)}, values...), nil
+		}
+		spec.Assign = func(columns []string, values []any) error {
+			outValue := int(values[0].(*sql.NullInt64).Int64)
+			inValue := int(values[1].(*sql.NullInt64).Int64)
+			if nids[inValue] == nil {
+				nids[inValue] = map[*Tag]struct{}{byID[outValue]: {}}
+				return assign(columns[1:], values[1:])
+			}
+			nids[inValue][byID[outValue]] = struct{}{}
+			return nil
+		}
+	})
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		nodes, ok := nids[n.ID]
+		if !ok {
+			return fmt.Errorf(`unexpected "bookmarks" node returned %v`, n.ID)
+		}
+		for kn := range nodes {
+			assign(kn, n)
 		}
 	}
 	return nil

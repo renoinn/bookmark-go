@@ -26,31 +26,31 @@ type User struct {
 
 // UserEdges holds the relations/edges for other nodes in the graph.
 type UserEdges struct {
-	// Bookmark holds the value of the bookmark edge.
-	Bookmark []*Bookmark `json:"bookmark,omitempty"`
-	// Tag holds the value of the tag edge.
-	Tag []*Tag `json:"tag,omitempty"`
+	// Bookmarks holds the value of the bookmarks edge.
+	Bookmarks []*Bookmark `json:"bookmarks,omitempty"`
+	// Tags holds the value of the tags edge.
+	Tags []*Tag `json:"tags,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
 	loadedTypes [2]bool
 }
 
-// BookmarkOrErr returns the Bookmark value or an error if the edge
+// BookmarksOrErr returns the Bookmarks value or an error if the edge
 // was not loaded in eager-loading.
-func (e UserEdges) BookmarkOrErr() ([]*Bookmark, error) {
+func (e UserEdges) BookmarksOrErr() ([]*Bookmark, error) {
 	if e.loadedTypes[0] {
-		return e.Bookmark, nil
+		return e.Bookmarks, nil
 	}
-	return nil, &NotLoadedError{edge: "bookmark"}
+	return nil, &NotLoadedError{edge: "bookmarks"}
 }
 
-// TagOrErr returns the Tag value or an error if the edge
+// TagsOrErr returns the Tags value or an error if the edge
 // was not loaded in eager-loading.
-func (e UserEdges) TagOrErr() ([]*Tag, error) {
+func (e UserEdges) TagsOrErr() ([]*Tag, error) {
 	if e.loadedTypes[1] {
-		return e.Tag, nil
+		return e.Tags, nil
 	}
-	return nil, &NotLoadedError{edge: "tag"}
+	return nil, &NotLoadedError{edge: "tags"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -100,14 +100,14 @@ func (u *User) assignValues(columns []string, values []any) error {
 	return nil
 }
 
-// QueryBookmark queries the "bookmark" edge of the User entity.
-func (u *User) QueryBookmark() *BookmarkQuery {
-	return (&UserClient{config: u.config}).QueryBookmark(u)
+// QueryBookmarks queries the "bookmarks" edge of the User entity.
+func (u *User) QueryBookmarks() *BookmarkQuery {
+	return (&UserClient{config: u.config}).QueryBookmarks(u)
 }
 
-// QueryTag queries the "tag" edge of the User entity.
-func (u *User) QueryTag() *TagQuery {
-	return (&UserClient{config: u.config}).QueryTag(u)
+// QueryTags queries the "tags" edge of the User entity.
+func (u *User) QueryTags() *TagQuery {
+	return (&UserClient{config: u.config}).QueryTags(u)
 }
 
 // Update returns a builder for updating this User.

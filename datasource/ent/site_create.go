@@ -32,19 +32,19 @@ func (sc *SiteCreate) SetTitle(s string) *SiteCreate {
 	return sc
 }
 
-// AddBookmarkIDs adds the "bookmark" edge to the Bookmark entity by IDs.
-func (sc *SiteCreate) AddBookmarkIDs(ids ...int) *SiteCreate {
-	sc.mutation.AddBookmarkIDs(ids...)
+// AddBookmarkFromIDs adds the "bookmark_from" edge to the Bookmark entity by IDs.
+func (sc *SiteCreate) AddBookmarkFromIDs(ids ...int) *SiteCreate {
+	sc.mutation.AddBookmarkFromIDs(ids...)
 	return sc
 }
 
-// AddBookmark adds the "bookmark" edges to the Bookmark entity.
-func (sc *SiteCreate) AddBookmark(b ...*Bookmark) *SiteCreate {
+// AddBookmarkFrom adds the "bookmark_from" edges to the Bookmark entity.
+func (sc *SiteCreate) AddBookmarkFrom(b ...*Bookmark) *SiteCreate {
 	ids := make([]int, len(b))
 	for i := range b {
 		ids[i] = b[i].ID
 	}
-	return sc.AddBookmarkIDs(ids...)
+	return sc.AddBookmarkFromIDs(ids...)
 }
 
 // Mutation returns the SiteMutation object of the builder.
@@ -174,12 +174,12 @@ func (sc *SiteCreate) createSpec() (*Site, *sqlgraph.CreateSpec) {
 		_spec.SetField(site.FieldTitle, field.TypeString, value)
 		_node.Title = value
 	}
-	if nodes := sc.mutation.BookmarkIDs(); len(nodes) > 0 {
+	if nodes := sc.mutation.BookmarkFromIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   site.BookmarkTable,
-			Columns: []string{site.BookmarkColumn},
+			Table:   site.BookmarkFromTable,
+			Columns: []string{site.BookmarkFromColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{

@@ -33,7 +33,7 @@ func (User) Fields() []ent.Field {
 // Edges of the User.
 func (User) Edges() []ent.Edge {
 	return []ent.Edge{
-		edge.To("bookmark", Bookmark.Type),
-		edge.To("tag", Tag.Type),
+		edge.To("bookmarks", Bookmark.Type),
+		edge.To("tags", Tag.Type),
 	}
 }

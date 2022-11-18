@@ -26,6 +26,6 @@ func (Site) Fields() []ent.Field {
 // Edges of the Site.
 func (Site) Edges() []ent.Edge {
 	return []ent.Edge{
-		edge.To("bookmark", Bookmark.Type),
+		edge.To("bookmark_from", Bookmark.Type),
 	}
 }

@@ -291,25 +291,25 @@ func EmailContainsFold(v string) predicate.User {
 	})
 }
 
-// HasBookmark applies the HasEdge predicate on the "bookmark" edge.
-func HasBookmark() predicate.User {
+// HasBookmarks applies the HasEdge predicate on the "bookmarks" edge.
+func HasBookmarks() predicate.User {
 	return predicate.User(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.To(BookmarkTable, FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, BookmarkTable, BookmarkColumn),
+			sqlgraph.To(BookmarksTable, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, BookmarksTable, BookmarksColumn),
 		)
 		sqlgraph.HasNeighbors(s, step)
 	})
 }
 
-// HasBookmarkWith applies the HasEdge predicate on the "bookmark" edge with a given conditions (other predicates).
-func HasBookmarkWith(preds ...predicate.Bookmark) predicate.User {
+// HasBookmarksWith applies the HasEdge predicate on the "bookmarks" edge with a given conditions (other predicates).
+func HasBookmarksWith(preds ...predicate.Bookmark) predicate.User {
 	return predicate.User(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.To(BookmarkInverseTable, FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, BookmarkTable, BookmarkColumn),
+			sqlgraph.To(BookmarksInverseTable, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, BookmarksTable, BookmarksColumn),
 		)
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
@@ -319,25 +319,25 @@ func HasBookmarkWith(preds ...predicate.Bookmark) predicate.User {
 	})
 }
 
-// HasTag applies the HasEdge predicate on the "tag" edge.
-func HasTag() predicate.User {
+// HasTags applies the HasEdge predicate on the "tags" edge.
+func HasTags() predicate.User {
 	return predicate.User(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.To(TagTable, FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, TagTable, TagColumn),
+			sqlgraph.To(TagsTable, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, TagsTable, TagsColumn),
 		)
 		sqlgraph.HasNeighbors(s, step)
 	})
 }
 
-// HasTagWith applies the HasEdge predicate on the "tag" edge with a given conditions (other predicates).
-func HasTagWith(preds ...predicate.Tag) predicate.User {
+// HasTagsWith applies the HasEdge predicate on the "tags" edge with a given conditions (other predicates).
+func HasTagsWith(preds ...predicate.Tag) predicate.User {
 	return predicate.User(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.To(TagInverseTable, FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, TagTable, TagColumn),
+			sqlgraph.To(TagsInverseTable, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, TagsTable, TagsColumn),
 		)
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {

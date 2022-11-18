@@ -13,17 +13,24 @@ const (
 	FieldName = "name"
 	// FieldCount holds the string denoting the count field in the database.
 	FieldCount = "count"
-	// EdgeUser holds the string denoting the user edge name in mutations.
-	EdgeUser = "user"
+	// EdgeOwner holds the string denoting the owner edge name in mutations.
+	EdgeOwner = "owner"
+	// EdgeBookmarks holds the string denoting the bookmarks edge name in mutations.
+	EdgeBookmarks = "bookmarks"
 	// Table holds the table name of the tag in the database.
 	Table = "tags"
-	// UserTable is the table that holds the user relation/edge.
-	UserTable = "tags"
-	// UserInverseTable is the table name for the User entity.
+	// OwnerTable is the table that holds the owner relation/edge.
+	OwnerTable = "tags"
+	// OwnerInverseTable is the table name for the User entity.
 	// It exists in this package in order to avoid circular dependency with the "user" package.
-	UserInverseTable = "users"
-	// UserColumn is the table column denoting the user relation/edge.
-	UserColumn = "user_tag"
+	OwnerInverseTable = "users"
+	// OwnerColumn is the table column denoting the owner relation/edge.
+	OwnerColumn = "user_tags"
+	// BookmarksTable is the table that holds the bookmarks relation/edge. The primary key declared below.
+	BookmarksTable = "bookmark_tags"
+	// BookmarksInverseTable is the table name for the Bookmark entity.
+	// It exists in this package in order to avoid circular dependency with the "bookmark" package.
+	BookmarksInverseTable = "bookmarks"
 )
 
 // Columns holds all SQL columns for tag fields.
@@ -37,8 +44,14 @@ var Columns = []string{
 // ForeignKeys holds the SQL foreign-keys that are owned by the "tags"
 // table and are not defined as standalone fields in the schema.
 var ForeignKeys = []string{
-	"user_tag",
+	"user_tags",
 }
+
+var (
+	// BookmarksPrimaryKey and BookmarksColumn2 are the table columns denoting the
+	// primary key for the bookmarks relation (M2M).
+	BookmarksPrimaryKey = []string{"bookmark_id", "tag_id"}
+)
 
 // ValidColumn reports if the column name is valid (part of the table columns).
 func ValidColumn(column string) bool {

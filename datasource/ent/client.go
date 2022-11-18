@@ -229,15 +229,15 @@ func (c *BookmarkClient) GetX(ctx context.Context, id int) *Bookmark {
 	return obj
 }
 
-// QuerySite queries the site edge of a Bookmark.
-func (c *BookmarkClient) QuerySite(b *Bookmark) *SiteQuery {
+// QueryHaveSite queries the have_site edge of a Bookmark.
+func (c *BookmarkClient) QueryHaveSite(b *Bookmark) *SiteQuery {
 	query := &SiteQuery{config: c.config}
 	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := b.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(bookmark.Table, bookmark.FieldID, id),
 			sqlgraph.To(site.Table, site.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, bookmark.SiteTable, bookmark.SiteColumn),
+			sqlgraph.Edge(sqlgraph.M2O, true, bookmark.HaveSiteTable, bookmark.HaveSiteColumn),
 		)
 		fromV = sqlgraph.Neighbors(b.driver.Dialect(), step)
 		return fromV, nil
@@ -245,15 +245,31 @@ func (c *BookmarkClient) QuerySite(b *Bookmark) *SiteQuery {
 	return query
 }
 
-// QueryUser queries the user edge of a Bookmark.
-func (c *BookmarkClient) QueryUser(b *Bookmark) *UserQuery {
+// QueryOwner queries the owner edge of a Bookmark.
+func (c *BookmarkClient) QueryOwner(b *Bookmark) *UserQuery {
 	query := &UserQuery{config: c.config}
 	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := b.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(bookmark.Table, bookmark.FieldID, id),
 			sqlgraph.To(user.Table, user.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, bookmark.UserTable, bookmark.UserColumn),
+			sqlgraph.Edge(sqlgraph.M2O, true, bookmark.OwnerTable, bookmark.OwnerColumn),
+		)
+		fromV = sqlgraph.Neighbors(b.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryTags queries the tags edge of a Bookmark.
+func (c *BookmarkClient) QueryTags(b *Bookmark) *TagQuery {
+	query := &TagQuery{config: c.config}
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := b.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(bookmark.Table, bookmark.FieldID, id),
+			sqlgraph.To(tag.Table, tag.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, false, bookmark.TagsTable, bookmark.TagsPrimaryKey...),
 		)
 		fromV = sqlgraph.Neighbors(b.driver.Dialect(), step)
 		return fromV, nil
@@ -351,15 +367,15 @@ func (c *SiteClient) GetX(ctx context.Context, id int) *Site {
 	return obj
 }
 
-// QueryBookmark queries the bookmark edge of a Site.
-func (c *SiteClient) QueryBookmark(s *Site) *BookmarkQuery {
+// QueryBookmarkFrom queries the bookmark_from edge of a Site.
+func (c *SiteClient) QueryBookmarkFrom(s *Site) *BookmarkQuery {
 	query := &BookmarkQuery{config: c.config}
 	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := s.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(site.Table, site.FieldID, id),
 			sqlgraph.To(bookmark.Table, bookmark.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, site.BookmarkTable, site.BookmarkColumn),
+			sqlgraph.Edge(sqlgraph.O2M, false, site.BookmarkFromTable, site.BookmarkFromColumn),
 		)
 		fromV = sqlgraph.Neighbors(s.driver.Dialect(), step)
 		return fromV, nil
@@ -457,15 +473,31 @@ func (c *TagClient) GetX(ctx context.Context, id int) *Tag {
 	return obj
 }
 
-// QueryUser queries the user edge of a Tag.
-func (c *TagClient) QueryUser(t *Tag) *UserQuery {
+// QueryOwner queries the owner edge of a Tag.
+func (c *TagClient) QueryOwner(t *Tag) *UserQuery {
 	query := &UserQuery{config: c.config}
 	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := t.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(tag.Table, tag.FieldID, id),
 			sqlgraph.To(user.Table, user.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, tag.UserTable, tag.UserColumn),
+			sqlgraph.Edge(sqlgraph.M2O, true, tag.OwnerTable, tag.OwnerColumn),
+		)
+		fromV = sqlgraph.Neighbors(t.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryBookmarks queries the bookmarks edge of a Tag.
+func (c *TagClient) QueryBookmarks(t *Tag) *BookmarkQuery {
+	query := &BookmarkQuery{config: c.config}
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := t.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(tag.Table, tag.FieldID, id),
+			sqlgraph.To(bookmark.Table, bookmark.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, true, tag.BookmarksTable, tag.BookmarksPrimaryKey...),
 		)
 		fromV = sqlgraph.Neighbors(t.driver.Dialect(), step)
 		return fromV, nil
@@ -563,15 +595,15 @@ func (c *UserClient) GetX(ctx context.Context, id int) *User {
 	return obj
 }
 
-// QueryBookmark queries the bookmark edge of a User.
-func (c *UserClient) QueryBookmark(u *User) *BookmarkQuery {
+// QueryBookmarks queries the bookmarks edge of a User.
+func (c *UserClient) QueryBookmarks(u *User) *BookmarkQuery {
 	query := &BookmarkQuery{config: c.config}
 	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := u.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(user.Table, user.FieldID, id),
 			sqlgraph.To(bookmark.Table, bookmark.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, user.BookmarkTable, user.BookmarkColumn),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.BookmarksTable, user.BookmarksColumn),
 		)
 		fromV = sqlgraph.Neighbors(u.driver.Dialect(), step)
 		return fromV, nil
@@ -579,15 +611,15 @@ func (c *UserClient) QueryBookmark(u *User) *BookmarkQuery {
 	return query
 }
 
-// QueryTag queries the tag edge of a User.
-func (c *UserClient) QueryTag(u *User) *TagQuery {
+// QueryTags queries the tags edge of a User.
+func (c *UserClient) QueryTags(u *User) *TagQuery {
 	query := &TagQuery{config: c.config}
 	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := u.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(user.Table, user.FieldID, id),
 			sqlgraph.To(tag.Table, tag.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, user.TagTable, user.TagColumn),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.TagsTable, user.TagsColumn),
 		)
 		fromV = sqlgraph.Neighbors(u.driver.Dialect(), step)
 		return fromV, nil

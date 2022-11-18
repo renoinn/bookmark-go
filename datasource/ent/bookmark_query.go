@@ -4,6 +4,7 @@ package ent
 
 import (
 	"context"
+	"database/sql/driver"
 	"fmt"
 	"math"
 
@@ -13,20 +14,22 @@ import (
 	"github.com/renoinn/bookmark-go/datasource/ent/bookmark"
 	"github.com/renoinn/bookmark-go/datasource/ent/predicate"
 	"github.com/renoinn/bookmark-go/datasource/ent/site"
+	"github.com/renoinn/bookmark-go/datasource/ent/tag"
 	"github.com/renoinn/bookmark-go/datasource/ent/user"
 )
 
 // BookmarkQuery is the builder for querying Bookmark entities.
 type BookmarkQuery struct {
 	config
-	limit      *int
-	offset     *int
-	unique     *bool
-	order      []OrderFunc
-	fields     []string
-	predicates []predicate.Bookmark
-	withSite   *SiteQuery
-	withUser   *UserQuery
+	limit        *int
+	offset       *int
+	unique       *bool
+	order        []OrderFunc
+	fields       []string
+	predicates   []predicate.Bookmark
+	withHaveSite *SiteQuery
+	withOwner    *UserQuery
+	withTags     *TagQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -63,8 +66,8 @@ func (bq *BookmarkQuery) Order(o ...OrderFunc) *BookmarkQuery {
 	return bq
 }
 
-// QuerySite chains the current query on the "site" edge.
-func (bq *BookmarkQuery) QuerySite() *SiteQuery {
+// QueryHaveSite chains the current query on the "have_site" edge.
+func (bq *BookmarkQuery) QueryHaveSite() *SiteQuery {
 	query := &SiteQuery{config: bq.config}
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
 		if err := bq.prepareQuery(ctx); err != nil {
@@ -77,7 +80,7 @@ func (bq *BookmarkQuery) QuerySite() *SiteQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(bookmark.Table, bookmark.FieldID, selector),
 			sqlgraph.To(site.Table, site.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, bookmark.SiteTable, bookmark.SiteColumn),
+			sqlgraph.Edge(sqlgraph.M2O, true, bookmark.HaveSiteTable, bookmark.HaveSiteColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(bq.driver.Dialect(), step)
 		return fromU, nil
@@ -85,8 +88,8 @@ func (bq *BookmarkQuery) QuerySite() *SiteQuery {
 	return query
 }
 
-// QueryUser chains the current query on the "user" edge.
-func (bq *BookmarkQuery) QueryUser() *UserQuery {
+// QueryOwner chains the current query on the "owner" edge.
+func (bq *BookmarkQuery) QueryOwner() *UserQuery {
 	query := &UserQuery{config: bq.config}
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
 		if err := bq.prepareQuery(ctx); err != nil {
@@ -99,7 +102,29 @@ func (bq *BookmarkQuery) QueryUser() *UserQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(bookmark.Table, bookmark.FieldID, selector),
 			sqlgraph.To(user.Table, user.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, bookmark.UserTable, bookmark.UserColumn),
+			sqlgraph.Edge(sqlgraph.M2O, true, bookmark.OwnerTable, bookmark.OwnerColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(bq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryTags chains the current query on the "tags" edge.
+func (bq *BookmarkQuery) QueryTags() *TagQuery {
+	query := &TagQuery{config: bq.config}
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := bq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := bq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(bookmark.Table, bookmark.FieldID, selector),
+			sqlgraph.To(tag.Table, tag.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, false, bookmark.TagsTable, bookmark.TagsPrimaryKey...),
 		)
 		fromU = sqlgraph.SetNeighbors(bq.driver.Dialect(), step)
 		return fromU, nil
@@ -283,13 +308,14 @@ func (bq *BookmarkQuery) Clone() *BookmarkQuery {
 		return nil
 	}
 	return &BookmarkQuery{
-		config:     bq.config,
-		limit:      bq.limit,
-		offset:     bq.offset,
-		order:      append([]OrderFunc{}, bq.order...),
-		predicates: append([]predicate.Bookmark{}, bq.predicates...),
-		withSite:   bq.withSite.Clone(),
-		withUser:   bq.withUser.Clone(),
+		config:       bq.config,
+		limit:        bq.limit,
+		offset:       bq.offset,
+		order:        append([]OrderFunc{}, bq.order...),
+		predicates:   append([]predicate.Bookmark{}, bq.predicates...),
+		withHaveSite: bq.withHaveSite.Clone(),
+		withOwner:    bq.withOwner.Clone(),
+		withTags:     bq.withTags.Clone(),
 		// clone intermediate query.
 		sql:    bq.sql.Clone(),
 		path:   bq.path,
@@ -297,25 +323,36 @@ func (bq *BookmarkQuery) Clone() *BookmarkQuery {
 	}
 }
 
-// WithSite tells the query-builder to eager-load the nodes that are connected to
-// the "site" edge. The optional arguments are used to configure the query builder of the edge.
-func (bq *BookmarkQuery) WithSite(opts ...func(*SiteQuery)) *BookmarkQuery {
+// WithHaveSite tells the query-builder to eager-load the nodes that are connected to
+// the "have_site" edge. The optional arguments are used to configure the query builder of the edge.
+func (bq *BookmarkQuery) WithHaveSite(opts ...func(*SiteQuery)) *BookmarkQuery {
 	query := &SiteQuery{config: bq.config}
 	for _, opt := range opts {
 		opt(query)
 	}
-	bq.withSite = query
+	bq.withHaveSite = query
 	return bq
 }
 
-// WithUser tells the query-builder to eager-load the nodes that are connected to
-// the "user" edge. The optional arguments are used to configure the query builder of the edge.
-func (bq *BookmarkQuery) WithUser(opts ...func(*UserQuery)) *BookmarkQuery {
+// WithOwner tells the query-builder to eager-load the nodes that are connected to
+// the "owner" edge. The optional arguments are used to configure the query builder of the edge.
+func (bq *BookmarkQuery) WithOwner(opts ...func(*UserQuery)) *BookmarkQuery {
 	query := &UserQuery{config: bq.config}
 	for _, opt := range opts {
 		opt(query)
 	}
-	bq.withUser = query
+	bq.withOwner = query
+	return bq
+}
+
+// WithTags tells the query-builder to eager-load the nodes that are connected to
+// the "tags" edge. The optional arguments are used to configure the query builder of the edge.
+func (bq *BookmarkQuery) WithTags(opts ...func(*TagQuery)) *BookmarkQuery {
+	query := &TagQuery{config: bq.config}
+	for _, opt := range opts {
+		opt(query)
+	}
+	bq.withTags = query
 	return bq
 }
 
@@ -392,9 +429,10 @@ func (bq *BookmarkQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Boo
 	var (
 		nodes       = []*Bookmark{}
 		_spec       = bq.querySpec()
-		loadedTypes = [2]bool{
-			bq.withSite != nil,
-			bq.withUser != nil,
+		loadedTypes = [3]bool{
+			bq.withHaveSite != nil,
+			bq.withOwner != nil,
+			bq.withTags != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
@@ -415,22 +453,29 @@ func (bq *BookmarkQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Boo
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
-	if query := bq.withSite; query != nil {
-		if err := bq.loadSite(ctx, query, nodes, nil,
-			func(n *Bookmark, e *Site) { n.Edges.Site = e }); err != nil {
+	if query := bq.withHaveSite; query != nil {
+		if err := bq.loadHaveSite(ctx, query, nodes, nil,
+			func(n *Bookmark, e *Site) { n.Edges.HaveSite = e }); err != nil {
 			return nil, err
 		}
 	}
-	if query := bq.withUser; query != nil {
-		if err := bq.loadUser(ctx, query, nodes, nil,
-			func(n *Bookmark, e *User) { n.Edges.User = e }); err != nil {
+	if query := bq.withOwner; query != nil {
+		if err := bq.loadOwner(ctx, query, nodes, nil,
+			func(n *Bookmark, e *User) { n.Edges.Owner = e }); err != nil {
+			return nil, err
+		}
+	}
+	if query := bq.withTags; query != nil {
+		if err := bq.loadTags(ctx, query, nodes,
+			func(n *Bookmark) { n.Edges.Tags = []*Tag{} },
+			func(n *Bookmark, e *Tag) { n.Edges.Tags = append(n.Edges.Tags, e) }); err != nil {
 			return nil, err
 		}
 	}
 	return nodes, nil
 }
 
-func (bq *BookmarkQuery) loadSite(ctx context.Context, query *SiteQuery, nodes []*Bookmark, init func(*Bookmark), assign func(*Bookmark, *Site)) error {
+func (bq *BookmarkQuery) loadHaveSite(ctx context.Context, query *SiteQuery, nodes []*Bookmark, init func(*Bookmark), assign func(*Bookmark, *Site)) error {
 	ids := make([]int, 0, len(nodes))
 	nodeids := make(map[int][]*Bookmark)
 	for i := range nodes {
@@ -456,7 +501,7 @@ func (bq *BookmarkQuery) loadSite(ctx context.Context, query *SiteQuery, nodes [
 	}
 	return nil
 }
-func (bq *BookmarkQuery) loadUser(ctx context.Context, query *UserQuery, nodes []*Bookmark, init func(*Bookmark), assign func(*Bookmark, *User)) error {
+func (bq *BookmarkQuery) loadOwner(ctx context.Context, query *UserQuery, nodes []*Bookmark, init func(*Bookmark), assign func(*Bookmark, *User)) error {
 	ids := make([]int, 0, len(nodes))
 	nodeids := make(map[int][]*Bookmark)
 	for i := range nodes {
@@ -478,6 +523,64 @@ func (bq *BookmarkQuery) loadUser(ctx context.Context, query *UserQuery, nodes [
 		}
 		for i := range nodes {
 			assign(nodes[i], n)
+		}
+	}
+	return nil
+}
+func (bq *BookmarkQuery) loadTags(ctx context.Context, query *TagQuery, nodes []*Bookmark, init func(*Bookmark), assign func(*Bookmark, *Tag)) error {
+	edgeIDs := make([]driver.Value, len(nodes))
+	byID := make(map[int]*Bookmark)
+	nids := make(map[int]map[*Bookmark]struct{})
+	for i, node := range nodes {
+		edgeIDs[i] = node.ID
+		byID[node.ID] = node
+		if init != nil {
+			init(node)
+		}
+	}
+	query.Where(func(s *sql.Selector) {
+		joinT := sql.Table(bookmark.TagsTable)
+		s.Join(joinT).On(s.C(tag.FieldID), joinT.C(bookmark.TagsPrimaryKey[1]))
+		s.Where(sql.InValues(joinT.C(bookmark.TagsPrimaryKey[0]), edgeIDs...))
+		columns := s.SelectedColumns()
+		s.Select(joinT.C(bookmark.TagsPrimaryKey[0]))
+		s.AppendSelect(columns...)
+		s.SetDistinct(false)
+	})
+	if err := query.prepareQuery(ctx); err != nil {
+		return err
+	}
+	neighbors, err := query.sqlAll(ctx, func(_ context.Context, spec *sqlgraph.QuerySpec) {
+		assign := spec.Assign
+		values := spec.ScanValues
+		spec.ScanValues = func(columns []string) ([]any, error) {
+			values, err := values(columns[1:])
+			if err != nil {
+				return nil, err
+			}
+			return append([]any{new(sql.NullInt64)}, values...), nil
+		}
+		spec.Assign = func(columns []string, values []any) error {
+			outValue := int(values[0].(*sql.NullInt64).Int64)
+			inValue := int(values[1].(*sql.NullInt64).Int64)
+			if nids[inValue] == nil {
+				nids[inValue] = map[*Bookmark]struct{}{byID[outValue]: {}}
+				return assign(columns[1:], values[1:])
+			}
+			nids[inValue][byID[outValue]] = struct{}{}
+			return nil
+		}
+	})
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		nodes, ok := nids[n.ID]
+		if !ok {
+			return fmt.Errorf(`unexpected "tags" node returned %v`, n.ID)
+		}
+		for kn := range nodes {
+			assign(kn, n)
 		}
 	}
 	return nil

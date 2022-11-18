@@ -25,9 +25,11 @@ func (Tag) Fields() []ent.Field {
 // Edges of the Tag.
 func (Tag) Edges() []ent.Edge {
 	return []ent.Edge{
-		edge.From("user", User.Type).
-			Ref("tag").
-            Unique().
-            Required(),
+		edge.From("owner", User.Type).
+			Ref("tags").
+			Unique().
+			Required(),
+		edge.From("bookmarks", Bookmark.Type).
+			Ref("tags"),
 	}
 }

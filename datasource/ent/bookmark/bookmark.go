@@ -15,26 +15,33 @@ const (
 	FieldTitle = "title"
 	// FieldNote holds the string denoting the note field in the database.
 	FieldNote = "note"
-	// EdgeSite holds the string denoting the site edge name in mutations.
-	EdgeSite = "site"
-	// EdgeUser holds the string denoting the user edge name in mutations.
-	EdgeUser = "user"
+	// EdgeHaveSite holds the string denoting the have_site edge name in mutations.
+	EdgeHaveSite = "have_site"
+	// EdgeOwner holds the string denoting the owner edge name in mutations.
+	EdgeOwner = "owner"
+	// EdgeTags holds the string denoting the tags edge name in mutations.
+	EdgeTags = "tags"
 	// Table holds the table name of the bookmark in the database.
 	Table = "bookmarks"
-	// SiteTable is the table that holds the site relation/edge.
-	SiteTable = "bookmarks"
-	// SiteInverseTable is the table name for the Site entity.
+	// HaveSiteTable is the table that holds the have_site relation/edge.
+	HaveSiteTable = "bookmarks"
+	// HaveSiteInverseTable is the table name for the Site entity.
 	// It exists in this package in order to avoid circular dependency with the "site" package.
-	SiteInverseTable = "sites"
-	// SiteColumn is the table column denoting the site relation/edge.
-	SiteColumn = "site_id"
-	// UserTable is the table that holds the user relation/edge.
-	UserTable = "bookmarks"
-	// UserInverseTable is the table name for the User entity.
+	HaveSiteInverseTable = "sites"
+	// HaveSiteColumn is the table column denoting the have_site relation/edge.
+	HaveSiteColumn = "site_id"
+	// OwnerTable is the table that holds the owner relation/edge.
+	OwnerTable = "bookmarks"
+	// OwnerInverseTable is the table name for the User entity.
 	// It exists in this package in order to avoid circular dependency with the "user" package.
-	UserInverseTable = "users"
-	// UserColumn is the table column denoting the user relation/edge.
-	UserColumn = "user_id"
+	OwnerInverseTable = "users"
+	// OwnerColumn is the table column denoting the owner relation/edge.
+	OwnerColumn = "user_id"
+	// TagsTable is the table that holds the tags relation/edge. The primary key declared below.
+	TagsTable = "bookmark_tags"
+	// TagsInverseTable is the table name for the Tag entity.
+	// It exists in this package in order to avoid circular dependency with the "tag" package.
+	TagsInverseTable = "tags"
 )
 
 // Columns holds all SQL columns for bookmark fields.
@@ -45,6 +52,12 @@ var Columns = []string{
 	FieldTitle,
 	FieldNote,
 }
+
+var (
+	// TagsPrimaryKey and TagsColumn2 are the table columns denoting the
+	// primary key for the tags relation (M2M).
+	TagsPrimaryKey = []string{"bookmark_id", "tag_id"}
+)
 
 // ValidColumn reports if the column name is valid (part of the table columns).
 func ValidColumn(column string) bool {
