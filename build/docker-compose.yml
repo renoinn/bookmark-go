@@ -13,3 +13,13 @@ services:
       MYSQL_USER: bkmk_user
       MYSQL_PASSWORD: bkmk_password
       MYSQL_ROOT_PASSWORD: root
+  app:
+    container_name: "app"
+    volumes:
+      - .:/var/app
+    tty: true 
+    build:
+      context: .
+      dockerfile: app/Dockerfile
+    ports:
+      - "8080:8080"
