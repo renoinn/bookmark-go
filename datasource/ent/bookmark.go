@@ -21,8 +21,6 @@ type Bookmark struct {
 	UserID int `json:"user_id,omitempty"`
 	// SiteID holds the value of the "site_id" field.
 	SiteID int `json:"site_id,omitempty"`
-	// Title holds the value of the "title" field.
-	Title string `json:"title,omitempty"`
 	// Note holds the value of the "note" field.
 	Note string `json:"note,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
@@ -85,7 +83,7 @@ func (*Bookmark) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case bookmark.FieldID, bookmark.FieldUserID, bookmark.FieldSiteID:
 			values[i] = new(sql.NullInt64)
-		case bookmark.FieldTitle, bookmark.FieldNote:
+		case bookmark.FieldNote:
 			values[i] = new(sql.NullString)
 		default:
 			return nil, fmt.Errorf("unexpected column %q for type Bookmark", columns[i])
@@ -119,12 +117,6 @@ func (b *Bookmark) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field site_id", values[i])
 			} else if value.Valid {
 				b.SiteID = int(value.Int64)
-			}
-		case bookmark.FieldTitle:
-			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field title", values[i])
-			} else if value.Valid {
-				b.Title = value.String
 			}
 		case bookmark.FieldNote:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -180,9 +172,6 @@ func (b *Bookmark) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("site_id=")
 	builder.WriteString(fmt.Sprintf("%v", b.SiteID))
-	builder.WriteString(", ")
-	builder.WriteString("title=")
-	builder.WriteString(b.Title)
 	builder.WriteString(", ")
 	builder.WriteString("note=")
 	builder.WriteString(b.Note)

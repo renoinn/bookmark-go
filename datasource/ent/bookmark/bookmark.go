@@ -11,8 +11,6 @@ const (
 	FieldUserID = "user_id"
 	// FieldSiteID holds the string denoting the site_id field in the database.
 	FieldSiteID = "site_id"
-	// FieldTitle holds the string denoting the title field in the database.
-	FieldTitle = "title"
 	// FieldNote holds the string denoting the note field in the database.
 	FieldNote = "note"
 	// EdgeHaveSite holds the string denoting the have_site edge name in mutations.
@@ -49,7 +47,6 @@ var Columns = []string{
 	FieldID,
 	FieldUserID,
 	FieldSiteID,
-	FieldTitle,
 	FieldNote,
 }
 
@@ -70,8 +67,6 @@ func ValidColumn(column string) bool {
 }
 
 var (
-	// TitleValidator is a validator for the "title" field. It is called by the builders before save.
-	TitleValidator func(string) error
 	// NoteValidator is a validator for the "note" field. It is called by the builders before save.
 	NoteValidator func(string) error
 )

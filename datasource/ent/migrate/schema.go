@@ -12,7 +12,6 @@ var (
 	// BookmarksColumns holds the columns for the "bookmarks" table.
 	BookmarksColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
-		{Name: "title", Type: field.TypeString},
 		{Name: "note", Type: field.TypeString, Size: 1000},
 		{Name: "site_id", Type: field.TypeInt},
 		{Name: "user_id", Type: field.TypeInt},
@@ -25,13 +24,13 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "bookmarks_sites_bookmark_from",
-				Columns:    []*schema.Column{BookmarksColumns[3]},
+				Columns:    []*schema.Column{BookmarksColumns[2]},
 				RefColumns: []*schema.Column{SitesColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
 			{
 				Symbol:     "bookmarks_users_bookmarks",
-				Columns:    []*schema.Column{BookmarksColumns[4]},
+				Columns:    []*schema.Column{BookmarksColumns[3]},
 				RefColumns: []*schema.Column{UsersColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
@@ -52,10 +51,9 @@ var (
 	// TagsColumns holds the columns for the "tags" table.
 	TagsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
-		{Name: "user_id", Type: field.TypeInt},
 		{Name: "name", Type: field.TypeString},
 		{Name: "count", Type: field.TypeInt, Default: 0},
-		{Name: "user_tags", Type: field.TypeInt},
+		{Name: "user_id", Type: field.TypeInt},
 	}
 	// TagsTable holds the schema information for the "tags" table.
 	TagsTable = &schema.Table{
@@ -65,7 +63,7 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "tags_users_tags",
-				Columns:    []*schema.Column{TagsColumns[4]},
+				Columns:    []*schema.Column{TagsColumns[3]},
 				RefColumns: []*schema.Column{UsersColumns[0]},
 				OnDelete:   schema.NoAction,
 			},

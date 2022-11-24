@@ -30,7 +30,7 @@ const (
 	// It exists in this package in order to avoid circular dependency with the "tag" package.
 	TagsInverseTable = "tags"
 	// TagsColumn is the table column denoting the tags relation/edge.
-	TagsColumn = "user_tags"
+	TagsColumn = "user_id"
 )
 
 // Columns holds all SQL columns for user fields.

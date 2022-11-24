@@ -28,7 +28,6 @@ type TagQuery struct {
 	predicates    []predicate.Tag
 	withOwner     *UserQuery
 	withBookmarks *BookmarkQuery
-	withFKs       bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -393,19 +392,12 @@ func (tq *TagQuery) prepareQuery(ctx context.Context) error {
 func (tq *TagQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Tag, error) {
 	var (
 		nodes       = []*Tag{}
-		withFKs     = tq.withFKs
 		_spec       = tq.querySpec()
 		loadedTypes = [2]bool{
 			tq.withOwner != nil,
 			tq.withBookmarks != nil,
 		}
 	)
-	if tq.withOwner != nil {
-		withFKs = true
-	}
-	if withFKs {
-		_spec.Node.Columns = append(_spec.Node.Columns, tag.ForeignKeys...)
-	}
 	_spec.ScanValues = func(columns []string) ([]any, error) {
 		return (*Tag).scanValues(nil, columns)
 	}
@@ -444,10 +436,7 @@ func (tq *TagQuery) loadOwner(ctx context.Context, query *UserQuery, nodes []*Ta
 	ids := make([]int, 0, len(nodes))
 	nodeids := make(map[int][]*Tag)
 	for i := range nodes {
-		if nodes[i].user_tags == nil {
-			continue
-		}
-		fk := *nodes[i].user_tags
+		fk := nodes[i].UserID
 		if _, ok := nodeids[fk]; !ok {
 			ids = append(ids, fk)
 		}
@@ -461,7 +450,7 @@ func (tq *TagQuery) loadOwner(ctx context.Context, query *UserQuery, nodes []*Ta
 	for _, n := range neighbors {
 		nodes, ok := nodeids[n.ID]
 		if !ok {
-			return fmt.Errorf(`unexpected foreign-key "user_tags" returned %v`, n.ID)
+			return fmt.Errorf(`unexpected foreign-key "user_id" returned %v`, n.ID)
 		}
 		for i := range nodes {
 			assign(nodes[i], n)

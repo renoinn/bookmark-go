@@ -34,12 +34,6 @@ func (bc *BookmarkCreate) SetSiteID(i int) *BookmarkCreate {
 	return bc
 }
 
-// SetTitle sets the "title" field.
-func (bc *BookmarkCreate) SetTitle(s string) *BookmarkCreate {
-	bc.mutation.SetTitle(s)
-	return bc
-}
-
 // SetNote sets the "note" field.
 func (bc *BookmarkCreate) SetNote(s string) *BookmarkCreate {
 	bc.mutation.SetNote(s)
@@ -165,14 +159,6 @@ func (bc *BookmarkCreate) check() error {
 	if _, ok := bc.mutation.SiteID(); !ok {
 		return &ValidationError{Name: "site_id", err: errors.New(`ent: missing required field "Bookmark.site_id"`)}
 	}
-	if _, ok := bc.mutation.Title(); !ok {
-		return &ValidationError{Name: "title", err: errors.New(`ent: missing required field "Bookmark.title"`)}
-	}
-	if v, ok := bc.mutation.Title(); ok {
-		if err := bookmark.TitleValidator(v); err != nil {
-			return &ValidationError{Name: "title", err: fmt.Errorf(`ent: validator failed for field "Bookmark.title": %w`, err)}
-		}
-	}
 	if _, ok := bc.mutation.Note(); !ok {
 		return &ValidationError{Name: "note", err: errors.New(`ent: missing required field "Bookmark.note"`)}
 	}
@@ -214,10 +200,6 @@ func (bc *BookmarkCreate) createSpec() (*Bookmark, *sqlgraph.CreateSpec) {
 			},
 		}
 	)
-	if value, ok := bc.mutation.Title(); ok {
-		_spec.SetField(bookmark.FieldTitle, field.TypeString, value)
-		_node.Title = value
-	}
 	if value, ok := bc.mutation.Note(); ok {
 		_spec.SetField(bookmark.FieldNote, field.TypeString, value)
 		_node.Note = value

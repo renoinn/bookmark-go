@@ -38,7 +38,6 @@ type BookmarkMutation struct {
 	op               Op
 	typ              string
 	id               *int
-	title            *string
 	note             *string
 	clearedFields    map[string]struct{}
 	have_site        *int
@@ -221,42 +220,6 @@ func (m *BookmarkMutation) OldSiteID(ctx context.Context) (v int, err error) {
 // ResetSiteID resets all changes to the "site_id" field.
 func (m *BookmarkMutation) ResetSiteID() {
 	m.have_site = nil
-}
-
-// SetTitle sets the "title" field.
-func (m *BookmarkMutation) SetTitle(s string) {
-	m.title = &s
-}
-
-// Title returns the value of the "title" field in the mutation.
-func (m *BookmarkMutation) Title() (r string, exists bool) {
-	v := m.title
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldTitle returns the old "title" field's value of the Bookmark entity.
-// If the Bookmark object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *BookmarkMutation) OldTitle(ctx context.Context) (v string, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldTitle is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldTitle requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldTitle: %w", err)
-	}
-	return oldValue.Title, nil
-}
-
-// ResetTitle resets all changes to the "title" field.
-func (m *BookmarkMutation) ResetTitle() {
-	m.title = nil
 }
 
 // SetNote sets the "note" field.
@@ -446,15 +409,12 @@ func (m *BookmarkMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *BookmarkMutation) Fields() []string {
-	fields := make([]string, 0, 4)
+	fields := make([]string, 0, 3)
 	if m.owner != nil {
 		fields = append(fields, bookmark.FieldUserID)
 	}
 	if m.have_site != nil {
 		fields = append(fields, bookmark.FieldSiteID)
-	}
-	if m.title != nil {
-		fields = append(fields, bookmark.FieldTitle)
 	}
 	if m.note != nil {
 		fields = append(fields, bookmark.FieldNote)
@@ -471,8 +431,6 @@ func (m *BookmarkMutation) Field(name string) (ent.Value, bool) {
 		return m.UserID()
 	case bookmark.FieldSiteID:
 		return m.SiteID()
-	case bookmark.FieldTitle:
-		return m.Title()
 	case bookmark.FieldNote:
 		return m.Note()
 	}
@@ -488,8 +446,6 @@ func (m *BookmarkMutation) OldField(ctx context.Context, name string) (ent.Value
 		return m.OldUserID(ctx)
 	case bookmark.FieldSiteID:
 		return m.OldSiteID(ctx)
-	case bookmark.FieldTitle:
-		return m.OldTitle(ctx)
 	case bookmark.FieldNote:
 		return m.OldNote(ctx)
 	}
@@ -514,13 +470,6 @@ func (m *BookmarkMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetSiteID(v)
-		return nil
-	case bookmark.FieldTitle:
-		v, ok := value.(string)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetTitle(v)
 		return nil
 	case bookmark.FieldNote:
 		v, ok := value.(string)
@@ -586,9 +535,6 @@ func (m *BookmarkMutation) ResetField(name string) error {
 		return nil
 	case bookmark.FieldSiteID:
 		m.ResetSiteID()
-		return nil
-	case bookmark.FieldTitle:
-		m.ResetTitle()
 		return nil
 	case bookmark.FieldNote:
 		m.ResetNote()
@@ -1181,8 +1127,6 @@ type TagMutation struct {
 	op               Op
 	typ              string
 	id               *int
-	user_id          *int
-	adduser_id       *int
 	name             *string
 	count            *int
 	addcount         *int
@@ -1297,13 +1241,12 @@ func (m *TagMutation) IDs(ctx context.Context) ([]int, error) {
 
 // SetUserID sets the "user_id" field.
 func (m *TagMutation) SetUserID(i int) {
-	m.user_id = &i
-	m.adduser_id = nil
+	m.owner = &i
 }
 
 // UserID returns the value of the "user_id" field in the mutation.
 func (m *TagMutation) UserID() (r int, exists bool) {
-	v := m.user_id
+	v := m.owner
 	if v == nil {
 		return
 	}
@@ -1327,28 +1270,9 @@ func (m *TagMutation) OldUserID(ctx context.Context) (v int, err error) {
 	return oldValue.UserID, nil
 }
 
-// AddUserID adds i to the "user_id" field.
-func (m *TagMutation) AddUserID(i int) {
-	if m.adduser_id != nil {
-		*m.adduser_id += i
-	} else {
-		m.adduser_id = &i
-	}
-}
-
-// AddedUserID returns the value that was added to the "user_id" field in this mutation.
-func (m *TagMutation) AddedUserID() (r int, exists bool) {
-	v := m.adduser_id
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
 // ResetUserID resets all changes to the "user_id" field.
 func (m *TagMutation) ResetUserID() {
-	m.user_id = nil
-	m.adduser_id = nil
+	m.owner = nil
 }
 
 // SetName sets the "name" field.
@@ -1556,7 +1480,7 @@ func (m *TagMutation) Type() string {
 // AddedFields().
 func (m *TagMutation) Fields() []string {
 	fields := make([]string, 0, 3)
-	if m.user_id != nil {
+	if m.owner != nil {
 		fields = append(fields, tag.FieldUserID)
 	}
 	if m.name != nil {
@@ -1632,9 +1556,6 @@ func (m *TagMutation) SetField(name string, value ent.Value) error {
 // this mutation.
 func (m *TagMutation) AddedFields() []string {
 	var fields []string
-	if m.adduser_id != nil {
-		fields = append(fields, tag.FieldUserID)
-	}
 	if m.addcount != nil {
 		fields = append(fields, tag.FieldCount)
 	}
@@ -1646,8 +1567,6 @@ func (m *TagMutation) AddedFields() []string {
 // was not set, or was not defined in the schema.
 func (m *TagMutation) AddedField(name string) (ent.Value, bool) {
 	switch name {
-	case tag.FieldUserID:
-		return m.AddedUserID()
 	case tag.FieldCount:
 		return m.AddedCount()
 	}
@@ -1659,13 +1578,6 @@ func (m *TagMutation) AddedField(name string) (ent.Value, bool) {
 // type.
 func (m *TagMutation) AddField(name string, value ent.Value) error {
 	switch name {
-	case tag.FieldUserID:
-		v, ok := value.(int)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.AddUserID(v)
-		return nil
 	case tag.FieldCount:
 		v, ok := value.(int)
 		if !ok {

@@ -42,12 +42,6 @@ func (bu *BookmarkUpdate) SetSiteID(i int) *BookmarkUpdate {
 	return bu
 }
 
-// SetTitle sets the "title" field.
-func (bu *BookmarkUpdate) SetTitle(s string) *BookmarkUpdate {
-	bu.mutation.SetTitle(s)
-	return bu
-}
-
 // SetNote sets the "note" field.
 func (bu *BookmarkUpdate) SetNote(s string) *BookmarkUpdate {
 	bu.mutation.SetNote(s)
@@ -191,11 +185,6 @@ func (bu *BookmarkUpdate) ExecX(ctx context.Context) {
 
 // check runs all checks and user-defined validators on the builder.
 func (bu *BookmarkUpdate) check() error {
-	if v, ok := bu.mutation.Title(); ok {
-		if err := bookmark.TitleValidator(v); err != nil {
-			return &ValidationError{Name: "title", err: fmt.Errorf(`ent: validator failed for field "Bookmark.title": %w`, err)}
-		}
-	}
 	if v, ok := bu.mutation.Note(); ok {
 		if err := bookmark.NoteValidator(v); err != nil {
 			return &ValidationError{Name: "note", err: fmt.Errorf(`ent: validator failed for field "Bookmark.note": %w`, err)}
@@ -227,9 +216,6 @@ func (bu *BookmarkUpdate) sqlSave(ctx context.Context) (n int, err error) {
 				ps[i](selector)
 			}
 		}
-	}
-	if value, ok := bu.mutation.Title(); ok {
-		_spec.SetField(bookmark.FieldTitle, field.TypeString, value)
 	}
 	if value, ok := bu.mutation.Note(); ok {
 		_spec.SetField(bookmark.FieldNote, field.TypeString, value)
@@ -389,12 +375,6 @@ func (buo *BookmarkUpdateOne) SetSiteID(i int) *BookmarkUpdateOne {
 	return buo
 }
 
-// SetTitle sets the "title" field.
-func (buo *BookmarkUpdateOne) SetTitle(s string) *BookmarkUpdateOne {
-	buo.mutation.SetTitle(s)
-	return buo
-}
-
 // SetNote sets the "note" field.
 func (buo *BookmarkUpdateOne) SetNote(s string) *BookmarkUpdateOne {
 	buo.mutation.SetNote(s)
@@ -551,11 +531,6 @@ func (buo *BookmarkUpdateOne) ExecX(ctx context.Context) {
 
 // check runs all checks and user-defined validators on the builder.
 func (buo *BookmarkUpdateOne) check() error {
-	if v, ok := buo.mutation.Title(); ok {
-		if err := bookmark.TitleValidator(v); err != nil {
-			return &ValidationError{Name: "title", err: fmt.Errorf(`ent: validator failed for field "Bookmark.title": %w`, err)}
-		}
-	}
 	if v, ok := buo.mutation.Note(); ok {
 		if err := bookmark.NoteValidator(v); err != nil {
 			return &ValidationError{Name: "note", err: fmt.Errorf(`ent: validator failed for field "Bookmark.note": %w`, err)}
@@ -604,9 +579,6 @@ func (buo *BookmarkUpdateOne) sqlSave(ctx context.Context) (_node *Bookmark, err
 				ps[i](selector)
 			}
 		}
-	}
-	if value, ok := buo.mutation.Title(); ok {
-		_spec.SetField(bookmark.FieldTitle, field.TypeString, value)
 	}
 	if value, ok := buo.mutation.Note(); ok {
 		_spec.SetField(bookmark.FieldNote, field.TypeString, value)

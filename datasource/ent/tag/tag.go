@@ -25,7 +25,7 @@ const (
 	// It exists in this package in order to avoid circular dependency with the "user" package.
 	OwnerInverseTable = "users"
 	// OwnerColumn is the table column denoting the owner relation/edge.
-	OwnerColumn = "user_tags"
+	OwnerColumn = "user_id"
 	// BookmarksTable is the table that holds the bookmarks relation/edge. The primary key declared below.
 	BookmarksTable = "bookmark_tags"
 	// BookmarksInverseTable is the table name for the Bookmark entity.
@@ -41,12 +41,6 @@ var Columns = []string{
 	FieldCount,
 }
 
-// ForeignKeys holds the SQL foreign-keys that are owned by the "tags"
-// table and are not defined as standalone fields in the schema.
-var ForeignKeys = []string{
-	"user_tags",
-}
-
 var (
 	// BookmarksPrimaryKey and BookmarksColumn2 are the table columns denoting the
 	// primary key for the bookmarks relation (M2M).
@@ -57,11 +51,6 @@ var (
 func ValidColumn(column string) bool {
 	for i := range Columns {
 		if column == Columns[i] {
-			return true
-		}
-	}
-	for i := range ForeignKeys {
-		if column == ForeignKeys[i] {
 			return true
 		}
 	}

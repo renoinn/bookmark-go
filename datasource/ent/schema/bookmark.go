@@ -14,8 +14,8 @@ type Bookmark struct {
 // Fields of the Bookmark.
 func (Bookmark) Fields() []ent.Field {
 	return []ent.Field{
-		field.String("title").
-			NotEmpty(),
+		field.Int("user_id"),
+		field.Int("site_id"),
 		field.String("note").
 			MaxLen(1000),
 	}

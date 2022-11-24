@@ -31,14 +31,7 @@ func (tu *TagUpdate) Where(ps ...predicate.Tag) *TagUpdate {
 
 // SetUserID sets the "user_id" field.
 func (tu *TagUpdate) SetUserID(i int) *TagUpdate {
-	tu.mutation.ResetUserID()
 	tu.mutation.SetUserID(i)
-	return tu
-}
-
-// AddUserID adds i to the "user_id" field.
-func (tu *TagUpdate) AddUserID(i int) *TagUpdate {
-	tu.mutation.AddUserID(i)
 	return tu
 }
 
@@ -218,12 +211,6 @@ func (tu *TagUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			}
 		}
 	}
-	if value, ok := tu.mutation.UserID(); ok {
-		_spec.SetField(tag.FieldUserID, field.TypeInt, value)
-	}
-	if value, ok := tu.mutation.AddedUserID(); ok {
-		_spec.AddField(tag.FieldUserID, field.TypeInt, value)
-	}
 	if value, ok := tu.mutation.Name(); ok {
 		_spec.SetField(tag.FieldName, field.TypeString, value)
 	}
@@ -343,14 +330,7 @@ type TagUpdateOne struct {
 
 // SetUserID sets the "user_id" field.
 func (tuo *TagUpdateOne) SetUserID(i int) *TagUpdateOne {
-	tuo.mutation.ResetUserID()
 	tuo.mutation.SetUserID(i)
-	return tuo
-}
-
-// AddUserID adds i to the "user_id" field.
-func (tuo *TagUpdateOne) AddUserID(i int) *TagUpdateOne {
-	tuo.mutation.AddUserID(i)
 	return tuo
 }
 
@@ -559,12 +539,6 @@ func (tuo *TagUpdateOne) sqlSave(ctx context.Context) (_node *Tag, err error) {
 				ps[i](selector)
 			}
 		}
-	}
-	if value, ok := tuo.mutation.UserID(); ok {
-		_spec.SetField(tag.FieldUserID, field.TypeInt, value)
-	}
-	if value, ok := tuo.mutation.AddedUserID(); ok {
-		_spec.AddField(tag.FieldUserID, field.TypeInt, value)
 	}
 	if value, ok := tuo.mutation.Name(); ok {
 		_spec.SetField(tag.FieldName, field.TypeString, value)

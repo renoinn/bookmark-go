@@ -24,8 +24,7 @@ type Tag struct {
 	Count int `json:"count,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the TagQuery when eager-loading is set.
-	Edges     TagEdges `json:"edges"`
-	user_tags *int
+	Edges TagEdges `json:"edges"`
 }
 
 // TagEdges holds the relations/edges for other nodes in the graph.
@@ -70,8 +69,6 @@ func (*Tag) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullInt64)
 		case tag.FieldName:
 			values[i] = new(sql.NullString)
-		case tag.ForeignKeys[0]: // user_tags
-			values[i] = new(sql.NullInt64)
 		default:
 			return nil, fmt.Errorf("unexpected column %q for type Tag", columns[i])
 		}
@@ -110,13 +107,6 @@ func (t *Tag) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field count", values[i])
 			} else if value.Valid {
 				t.Count = int(value.Int64)
-			}
-		case tag.ForeignKeys[0]:
-			if value, ok := values[i].(*sql.NullInt64); !ok {
-				return fmt.Errorf("unexpected type %T for edge-field user_tags", value)
-			} else if value.Valid {
-				t.user_tags = new(int)
-				*t.user_tags = int(value.Int64)
 			}
 		}
 	}
