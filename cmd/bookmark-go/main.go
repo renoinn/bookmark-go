@@ -5,20 +5,23 @@ import (
 
 	"entgo.io/ent/dialect"
 	"github.com/gin-gonic/gin"
+	_ "github.com/go-sql-driver/mysql"
 	"github.com/renoinn/bookmark-go/datasource/ent"
 	"github.com/renoinn/bookmark-go/server/handler"
 	"github.com/renoinn/bookmark-go/server/repository"
 )
 
 func main() {
-    client, err := ent.Open(dialect.MySQL, "sample_user:sample_password@tcp(localhost:3306)/sample_db")
+    client, err := ent.Open(dialect.MySQL, "bkmk_user:bkmk_password@tcp(bookmark_mysql:3306)/bookmark_db")
     if err != nil {
         log.Fatal(err)
     }
 
-    r := repository.NewBookmarkRepository(client)
+    u := repository.NewUserRepository(client)
+    s := repository.NewSiteRepository(client)
+    b := repository.NewBookmarkRepository(client)
 
-    h := handler.NewBookmarkHandler(r)
+    h := handler.NewBookmarkHandler(u, s, b)
 
 	g := gin.Default()
 	g.GET("/ping", func(c *gin.Context) {

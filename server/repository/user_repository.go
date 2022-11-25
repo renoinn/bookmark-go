@@ -8,8 +8,8 @@ import (
 )
 
 type UserRepository interface {
-	CreateUser(ctx context.Context, email string, password string) (id uint64, err error)
-	FindById(ctx context.Context, id int) (user *ent.User, err error)
+	CreateUser(ctx context.Context, email string, password string) (entity *ent.User, err error)
+	FindById(ctx context.Context, id int) (entity *ent.User, err error)
 }
 
 type userRepository struct {
@@ -17,24 +17,24 @@ type userRepository struct {
 }
 
 // CreateUser implements UserRepository
-func (ur *userRepository) CreateUser(ctx context.Context, name string, email string) (id uint64, err error) {
+func (ur *userRepository) CreateUser(ctx context.Context, name string, email string) (entity *ent.User, err error) {
 	b := ur.client.User.Create()
 	// Add all fields.
 	b.SetName(name)
 	b.SetEmail(email)
 	e, err := b.Save(ctx)
 	if err != nil {
-		return 0, err
+		return nil, err
 	}
 
 	q := ur.client.User.Query().Where(user.ID(e.ID))
-    r, err := q.Only(ctx)
+    e, err = q.Only(ctx)
 	if err != nil {
 		// This should never happen.
-		return 0, err
+		return nil, err
 	}
 
-	return uint64(r.ID), nil
+	return e, nil
 }
 
 // FindById implements UserRepository

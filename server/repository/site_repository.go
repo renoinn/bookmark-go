@@ -1,14 +1,15 @@
 package repository
 
 import (
-	"github.com/gin-gonic/gin"
+	"context"
+
 	"github.com/renoinn/bookmark-go/datasource/ent"
 	"github.com/renoinn/bookmark-go/datasource/ent/site"
 )
 
 type SiteRepository interface {
-	CreateSite(ctx *gin.Context, title string, url string) (id uint64, err error)
-	FindById(ctx *gin.Context, id int) (site *ent.Site, err error)
+	CreateSite(ctx context.Context, title string, url string) (entity *ent.Site, err error)
+	FindById(ctx context.Context, id int) (entity *ent.Site, err error)
 }
 
 type siteRepository struct {
@@ -16,27 +17,27 @@ type siteRepository struct {
 }
 
 // CreateSite implements SiteRepository
-func (sr *siteRepository) CreateSite(ctx *gin.Context, title string, url string) (id uint64, err error) {
+func (sr *siteRepository) CreateSite(ctx context.Context, title string, url string) (entity *ent.Site, err error) {
 	b := sr.client.Site.Create()
 	b.SetTitle(title)
 	b.SetURL(url)
 	e, err := b.Save(ctx)
 	if err != nil {
-		return 0, err
+		return nil, err
 	}
 
 	q := sr.client.Site.Query().Where(site.ID(e.ID))
 	e, err = q.Only(ctx)
 	if err != nil {
 		// This should never happen.
-		return 0, err
+		return nil, err
 	}
 
-	return uint64(e.ID), nil
+	return e, nil
 }
 
 // FindById implements SiteRepository
-func (sr *siteRepository) FindById(ctx *gin.Context, id int) (site *ent.Site, err error) {
+func (sr *siteRepository) FindById(ctx context.Context, id int) (entity *ent.Site, err error) {
 	e, err := sr.client.Site.Get(ctx, id)
 	if err != nil {
 		return nil, err
