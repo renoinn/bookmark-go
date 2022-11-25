@@ -15,11 +15,10 @@ services:
       MYSQL_ROOT_PASSWORD: root
   app:
     container_name: "app"
+    image: cosmtrek/air
+    working_dir: /var/app
     volumes:
-      - .:/var/app
+      - ../.:/var/app
     tty: true 
-    build:
-      context: .
-      dockerfile: app/Dockerfile
     ports:
       - "8080:8080"
