@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/renoinn/bookmark-go/server/response"
 	"github.com/renoinn/bookmark-go/server/repository"
 )
 
@@ -37,25 +38,18 @@ func (bh *bookmarkHandler) GetBookmarks(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 	}
 
-	type ResponseData struct {
-		BookmarkID uint64 `json:"bookmark_id"`
-		SiteTitle  string `json:"site_title"`
-		SiteURL    string `json:"site_url"`
-		Note       string `json:"note"`
-	}
-
-	response := []ResponseData{}
+	res := []response.Bookmark{}
 	for _, value := range bookmarks {
-		data := ResponseData{
+		data := response.Bookmark{
 			BookmarkID: uint64(value.ID),
 			SiteTitle:  value.Edges.HaveSite.Title,
 			SiteURL:    value.Edges.HaveSite.URL,
 			Note:       value.Note,
 		}
-		response = append(response, data)
+		res = append(res, data)
 	}
 
-	ctx.JSON(http.StatusOK, response)
+	ctx.JSON(http.StatusOK, res)
 }
 
 func (bh *bookmarkHandler) PostBookmark(ctx *gin.Context) {
@@ -86,19 +80,12 @@ func (bh *bookmarkHandler) PostBookmark(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, "{msg: faild create bookmark}")
 	}
 
-	type ResponseData struct {
-		BookmarkID uint64 `json:"bookmark_id"`
-		SiteTitle  string `json:"site_title"`
-		SiteURL    string `json:"site_url"`
-		Note       string `json:"note"`
-	}
-
-	response := ResponseData{
+	res := response.Bookmark{
 		BookmarkID: uint64(b.ID),
 		SiteTitle:  b.Edges.HaveSite.Title,
 		SiteURL:    b.Edges.HaveSite.URL,
 		Note:       b.Note,
 	}
 
-	ctx.JSON(http.StatusOK, response)
+	ctx.JSON(http.StatusOK, res)
 }
