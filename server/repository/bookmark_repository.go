@@ -10,9 +10,10 @@ import (
 
 type BookmarkRepository interface {
 	GetBookmarks(ctx context.Context) (bookmarks []*ent.Bookmark, err error)
+	GetBookmarkById(ctx context.Context, id int) (bookmark *ent.Bookmark, err error)
 	CreateBookmark(ctx context.Context, user *ent.User, title string, url string, note string) (entity *ent.Bookmark, err error)
-	UpdateBookmark(ctx context.Context, user *ent.User, bookmark ent.Bookmark, title string, url string, note string) (entity *ent.Bookmark, err error)
-	DeleteBookmark(ctx context.Context, user *ent.User, bookmark ent.Bookmark) (id int, err error)
+	UpdateBookmark(ctx context.Context, user *ent.User, bookmark *ent.Bookmark, title string, url string, note string) (entity *ent.Bookmark, err error)
+	DeleteBookmark(ctx context.Context, user *ent.User, bookmark *ent.Bookmark) (id int, err error)
 }
 
 type bookmarkRepository struct {
@@ -21,6 +22,15 @@ type bookmarkRepository struct {
 
 func (br *bookmarkRepository) GetBookmarks(ctx context.Context) (bookmarks []*ent.Bookmark, err error) {
 	results, err := br.client.Bookmark.Query().All(ctx)
+	if err != nil {
+		log.Print(err)
+		return nil, err
+	}
+	return results, nil
+}
+
+func (br *bookmarkRepository) GetBookmarkById(ctx context.Context, id int) (bookmark *ent.Bookmark, err error) {
+	results, err := br.client.Bookmark.Get(ctx, id)
 	if err != nil {
 		log.Print(err)
 		return nil, err
@@ -50,7 +60,7 @@ func (br *bookmarkRepository) CreateBookmark(ctx context.Context, user *ent.User
 }
 
 // UpdateBookmark implements BookmarkRepository.
-func (br *bookmarkRepository) UpdateBookmark(ctx context.Context, user *ent.User, bookmark ent.Bookmark, title string, url string, note string) (entity *ent.Bookmark, err error) {
+func (br *bookmarkRepository) UpdateBookmark(ctx context.Context, user *ent.User, bookmark *ent.Bookmark, title string, url string, note string) (entity *ent.Bookmark, err error) {
 	builder := br.client.Bookmark.UpdateOneID(bookmark.ID)
 	builder.SetURL(url)
 	builder.SetTitle(title)
@@ -64,7 +74,7 @@ func (br *bookmarkRepository) UpdateBookmark(ctx context.Context, user *ent.User
 }
 
 // DeleteBookmark implements BookmarkRepository.
-func (br *bookmarkRepository) DeleteBookmark(ctx context.Context, user *ent.User, bookmark ent.Bookmark) (id int, err error) {
+func (br *bookmarkRepository) DeleteBookmark(ctx context.Context, user *ent.User, bookmark *ent.Bookmark) (id int, err error) {
 	builder := br.client.Bookmark.DeleteOneID(bookmark.ID)
 	err = builder.Exec(ctx)
 	if err != nil {

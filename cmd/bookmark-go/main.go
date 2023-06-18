@@ -18,10 +18,9 @@ func main() {
 	}
 
 	u := repository.NewUserRepository(client)
-	s := repository.NewSiteRepository(client)
 	b := repository.NewBookmarkRepository(client)
 
-	h := handler.NewBookmarkHandler(u, s, b)
+	h := handler.NewBookmarkHandler(u, b)
 
 	g := gin.Default()
 	g.GET("/ping", func(c *gin.Context) {

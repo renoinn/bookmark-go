@@ -11,21 +11,13 @@ import (
 type BookmarkHandler interface {
 	GetBookmarks(ctx *gin.Context)
 	PostBookmark(ctx *gin.Context)
+	PutBookmark(ctx *gin.Context)
+	DeleteBookmark(ctx *gin.Context)
 }
 
 type bookmarkHandler struct {
 	userRepository     repository.UserRepository
 	bookmarkRepository repository.BookmarkRepository
-}
-
-func NewBookmarkHandler(
-	userRepository repository.UserRepository,
-	bookmarkRepository repository.BookmarkRepository,
-) BookmarkHandler {
-	return &bookmarkHandler{
-		userRepository,
-		bookmarkRepository,
-	}
 }
 
 func (bh *bookmarkHandler) GetBookmarks(ctx *gin.Context) {
@@ -62,6 +54,7 @@ func (bh *bookmarkHandler) PostBookmark(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, "{msg: bad request}")
 	}
 
+	// TODO use authed user principale
 	u, err := bh.userRepository.FindById(ctx, 1)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, "{msg: user not found}")
@@ -80,4 +73,50 @@ func (bh *bookmarkHandler) PostBookmark(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusOK, res)
+}
+
+// PutBookmark implements BookmarkHandler.
+func (*bookmarkHandler) PutBookmark(ctx *gin.Context) {
+	panic("unimplemented")
+}
+
+// DeleteBookmark implements BookmarkHandler.
+func (bh *bookmarkHandler) DeleteBookmark(ctx *gin.Context) {
+	type DeleteParam struct {
+		ID int `form:"id" json:"id" valid:"Required;"`
+	}
+	var form DeleteParam
+
+	err := ctx.BindJSON(form)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, "{msg: bad request}")
+	}
+
+	// TODO use authed user principale
+	u, err := bh.userRepository.FindById(ctx, 1)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, "{msg: user not found}")
+	}
+
+	bk, err := bh.bookmarkRepository.GetBookmarkById(ctx, form.ID)
+	b, err := bh.bookmarkRepository.DeleteBookmark(ctx, u, bk)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, "{msg: faild create bookmark}")
+	}
+
+	res := response.Bookmark{
+		BookmarkID: uint64(b),
+	}
+
+	ctx.JSON(http.StatusOK, res)
+}
+
+func NewBookmarkHandler(
+	userRepository repository.UserRepository,
+	bookmarkRepository repository.BookmarkRepository,
+) BookmarkHandler {
+	return &bookmarkHandler{
+		userRepository,
+		bookmarkRepository,
+	}
 }
