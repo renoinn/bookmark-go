@@ -5,7 +5,6 @@ package ent
 import (
 	"github.com/renoinn/bookmark-go/datasource/ent/bookmark"
 	"github.com/renoinn/bookmark-go/datasource/ent/schema"
-	"github.com/renoinn/bookmark-go/datasource/ent/site"
 	"github.com/renoinn/bookmark-go/datasource/ent/tag"
 	"github.com/renoinn/bookmark-go/datasource/ent/user"
 )
@@ -16,17 +15,11 @@ import (
 func init() {
 	bookmarkFields := schema.Bookmark{}.Fields()
 	_ = bookmarkFields
-	// bookmarkDescNote is the schema descriptor for note field.
-	bookmarkDescNote := bookmarkFields[2].Descriptor()
-	// bookmark.NoteValidator is a validator for the "note" field. It is called by the builders before save.
-	bookmark.NoteValidator = bookmarkDescNote.Validators[0].(func(string) error)
-	siteFields := schema.Site{}.Fields()
-	_ = siteFields
-	// siteDescURL is the schema descriptor for url field.
-	siteDescURL := siteFields[0].Descriptor()
-	// site.URLValidator is a validator for the "url" field. It is called by the builders before save.
-	site.URLValidator = func() func(string) error {
-		validators := siteDescURL.Validators
+	// bookmarkDescURL is the schema descriptor for url field.
+	bookmarkDescURL := bookmarkFields[1].Descriptor()
+	// bookmark.URLValidator is a validator for the "url" field. It is called by the builders before save.
+	bookmark.URLValidator = func() func(string) error {
+		validators := bookmarkDescURL.Validators
 		fns := [...]func(string) error{
 			validators[0].(func(string) error),
 			validators[1].(func(string) error),
@@ -40,11 +33,11 @@ func init() {
 			return nil
 		}
 	}()
-	// siteDescTitle is the schema descriptor for title field.
-	siteDescTitle := siteFields[1].Descriptor()
-	// site.TitleValidator is a validator for the "title" field. It is called by the builders before save.
-	site.TitleValidator = func() func(string) error {
-		validators := siteDescTitle.Validators
+	// bookmarkDescTitle is the schema descriptor for title field.
+	bookmarkDescTitle := bookmarkFields[2].Descriptor()
+	// bookmark.TitleValidator is a validator for the "title" field. It is called by the builders before save.
+	bookmark.TitleValidator = func() func(string) error {
+		validators := bookmarkDescTitle.Validators
 		fns := [...]func(string) error{
 			validators[0].(func(string) error),
 			validators[1].(func(string) error),
@@ -58,6 +51,10 @@ func init() {
 			return nil
 		}
 	}()
+	// bookmarkDescNote is the schema descriptor for note field.
+	bookmarkDescNote := bookmarkFields[3].Descriptor()
+	// bookmark.NoteValidator is a validator for the "note" field. It is called by the builders before save.
+	bookmark.NoteValidator = bookmarkDescNote.Validators[0].(func(string) error)
 	tagFields := schema.Tag{}.Fields()
 	_ = tagFields
 	// tagDescName is the schema descriptor for name field.

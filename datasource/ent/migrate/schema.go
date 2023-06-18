@@ -12,8 +12,9 @@ var (
 	// BookmarksColumns holds the columns for the "bookmarks" table.
 	BookmarksColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "url", Type: field.TypeString, Size: 2048},
+		{Name: "title", Type: field.TypeString, Size: 100},
 		{Name: "note", Type: field.TypeString, Size: 1000},
-		{Name: "site_id", Type: field.TypeInt},
 		{Name: "user_id", Type: field.TypeInt},
 	}
 	// BookmarksTable holds the schema information for the "bookmarks" table.
@@ -23,30 +24,12 @@ var (
 		PrimaryKey: []*schema.Column{BookmarksColumns[0]},
 		ForeignKeys: []*schema.ForeignKey{
 			{
-				Symbol:     "bookmarks_sites_bookmark_from",
-				Columns:    []*schema.Column{BookmarksColumns[2]},
-				RefColumns: []*schema.Column{SitesColumns[0]},
-				OnDelete:   schema.NoAction,
-			},
-			{
 				Symbol:     "bookmarks_users_bookmarks",
-				Columns:    []*schema.Column{BookmarksColumns[3]},
+				Columns:    []*schema.Column{BookmarksColumns[4]},
 				RefColumns: []*schema.Column{UsersColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
 		},
-	}
-	// SitesColumns holds the columns for the "sites" table.
-	SitesColumns = []*schema.Column{
-		{Name: "id", Type: field.TypeInt, Increment: true},
-		{Name: "url", Type: field.TypeString, Size: 2048},
-		{Name: "title", Type: field.TypeString, Size: 100},
-	}
-	// SitesTable holds the schema information for the "sites" table.
-	SitesTable = &schema.Table{
-		Name:       "sites",
-		Columns:    SitesColumns,
-		PrimaryKey: []*schema.Column{SitesColumns[0]},
 	}
 	// TagsColumns holds the columns for the "tags" table.
 	TagsColumns = []*schema.Column{
@@ -109,7 +92,6 @@ var (
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
 		BookmarksTable,
-		SitesTable,
 		TagsTable,
 		UsersTable,
 		BookmarkTagsTable,
@@ -117,8 +99,7 @@ var (
 )
 
 func init() {
-	BookmarksTable.ForeignKeys[0].RefTable = SitesTable
-	BookmarksTable.ForeignKeys[1].RefTable = UsersTable
+	BookmarksTable.ForeignKeys[0].RefTable = UsersTable
 	TagsTable.ForeignKeys[0].RefTable = UsersTable
 	UsersTable.Annotation = &entsql.Annotation{
 		Table: "users",

@@ -12,16 +12,16 @@ import (
 )
 
 func main() {
-    client, err := ent.Open(dialect.MySQL, "bkmk_user:bkmk_password@tcp(bookmark_mysql:3306)/bookmark_db")
-    if err != nil {
-        log.Fatal(err)
-    }
+	client, err := ent.Open(dialect.MySQL, "bkmk_user:bkmk_password@tcp(bookmark_mysql:3306)/bookmark_db")
+	if err != nil {
+		log.Fatal(err)
+	}
 
-    u := repository.NewUserRepository(client)
-    s := repository.NewSiteRepository(client)
-    b := repository.NewBookmarkRepository(client)
+	u := repository.NewUserRepository(client)
+	s := repository.NewSiteRepository(client)
+	b := repository.NewBookmarkRepository(client)
 
-    h := handler.NewBookmarkHandler(u, s, b)
+	h := handler.NewBookmarkHandler(u, s, b)
 
 	g := gin.Default()
 	g.GET("/ping", func(c *gin.Context) {
@@ -31,6 +31,8 @@ func main() {
 	})
 	g.GET("/bookmarks", h.GetBookmarks)
 	g.POST("/bookmark", h.PostBookmark)
+	g.PUT("/bookmark", h.PutBookmark)
+	g.DELETE("/bookmark", h.DeleteBookmark)
 
 	g.Run() // listen and serve on 0.0.0.0:8080 (for windows "localhost:8080")
 }

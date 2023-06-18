@@ -25,7 +25,6 @@ type config struct {
 // hooks per client, for fast access.
 type hooks struct {
 	Bookmark []ent.Hook
-	Site     []ent.Hook
 	Tag      []ent.Hook
 	User     []ent.Hook
 }

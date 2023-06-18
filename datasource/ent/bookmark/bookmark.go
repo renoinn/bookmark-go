@@ -9,25 +9,18 @@ const (
 	FieldID = "id"
 	// FieldUserID holds the string denoting the user_id field in the database.
 	FieldUserID = "user_id"
-	// FieldSiteID holds the string denoting the site_id field in the database.
-	FieldSiteID = "site_id"
+	// FieldURL holds the string denoting the url field in the database.
+	FieldURL = "url"
+	// FieldTitle holds the string denoting the title field in the database.
+	FieldTitle = "title"
 	// FieldNote holds the string denoting the note field in the database.
 	FieldNote = "note"
-	// EdgeHaveSite holds the string denoting the have_site edge name in mutations.
-	EdgeHaveSite = "have_site"
 	// EdgeOwner holds the string denoting the owner edge name in mutations.
 	EdgeOwner = "owner"
 	// EdgeTags holds the string denoting the tags edge name in mutations.
 	EdgeTags = "tags"
 	// Table holds the table name of the bookmark in the database.
 	Table = "bookmarks"
-	// HaveSiteTable is the table that holds the have_site relation/edge.
-	HaveSiteTable = "bookmarks"
-	// HaveSiteInverseTable is the table name for the Site entity.
-	// It exists in this package in order to avoid circular dependency with the "site" package.
-	HaveSiteInverseTable = "sites"
-	// HaveSiteColumn is the table column denoting the have_site relation/edge.
-	HaveSiteColumn = "site_id"
 	// OwnerTable is the table that holds the owner relation/edge.
 	OwnerTable = "bookmarks"
 	// OwnerInverseTable is the table name for the User entity.
@@ -46,7 +39,8 @@ const (
 var Columns = []string{
 	FieldID,
 	FieldUserID,
-	FieldSiteID,
+	FieldURL,
+	FieldTitle,
 	FieldNote,
 }
 
@@ -67,6 +61,10 @@ func ValidColumn(column string) bool {
 }
 
 var (
+	// URLValidator is a validator for the "url" field. It is called by the builders before save.
+	URLValidator func(string) error
+	// TitleValidator is a validator for the "title" field. It is called by the builders before save.
+	TitleValidator func(string) error
 	// NoteValidator is a validator for the "note" field. It is called by the builders before save.
 	NoteValidator func(string) error
 )

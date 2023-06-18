@@ -12,7 +12,6 @@ import (
 	"entgo.io/ent/schema/field"
 	"github.com/renoinn/bookmark-go/datasource/ent/bookmark"
 	"github.com/renoinn/bookmark-go/datasource/ent/predicate"
-	"github.com/renoinn/bookmark-go/datasource/ent/site"
 	"github.com/renoinn/bookmark-go/datasource/ent/tag"
 	"github.com/renoinn/bookmark-go/datasource/ent/user"
 )
@@ -36,9 +35,15 @@ func (bu *BookmarkUpdate) SetUserID(i int) *BookmarkUpdate {
 	return bu
 }
 
-// SetSiteID sets the "site_id" field.
-func (bu *BookmarkUpdate) SetSiteID(i int) *BookmarkUpdate {
-	bu.mutation.SetSiteID(i)
+// SetURL sets the "url" field.
+func (bu *BookmarkUpdate) SetURL(s string) *BookmarkUpdate {
+	bu.mutation.SetURL(s)
+	return bu
+}
+
+// SetTitle sets the "title" field.
+func (bu *BookmarkUpdate) SetTitle(s string) *BookmarkUpdate {
+	bu.mutation.SetTitle(s)
 	return bu
 }
 
@@ -46,17 +51,6 @@ func (bu *BookmarkUpdate) SetSiteID(i int) *BookmarkUpdate {
 func (bu *BookmarkUpdate) SetNote(s string) *BookmarkUpdate {
 	bu.mutation.SetNote(s)
 	return bu
-}
-
-// SetHaveSiteID sets the "have_site" edge to the Site entity by ID.
-func (bu *BookmarkUpdate) SetHaveSiteID(id int) *BookmarkUpdate {
-	bu.mutation.SetHaveSiteID(id)
-	return bu
-}
-
-// SetHaveSite sets the "have_site" edge to the Site entity.
-func (bu *BookmarkUpdate) SetHaveSite(s *Site) *BookmarkUpdate {
-	return bu.SetHaveSiteID(s.ID)
 }
 
 // SetOwnerID sets the "owner" edge to the User entity by ID.
@@ -88,12 +82,6 @@ func (bu *BookmarkUpdate) AddTags(t ...*Tag) *BookmarkUpdate {
 // Mutation returns the BookmarkMutation object of the builder.
 func (bu *BookmarkUpdate) Mutation() *BookmarkMutation {
 	return bu.mutation
-}
-
-// ClearHaveSite clears the "have_site" edge to the Site entity.
-func (bu *BookmarkUpdate) ClearHaveSite() *BookmarkUpdate {
-	bu.mutation.ClearHaveSite()
-	return bu
 }
 
 // ClearOwner clears the "owner" edge to the User entity.
@@ -185,13 +173,20 @@ func (bu *BookmarkUpdate) ExecX(ctx context.Context) {
 
 // check runs all checks and user-defined validators on the builder.
 func (bu *BookmarkUpdate) check() error {
+	if v, ok := bu.mutation.URL(); ok {
+		if err := bookmark.URLValidator(v); err != nil {
+			return &ValidationError{Name: "url", err: fmt.Errorf(`ent: validator failed for field "Bookmark.url": %w`, err)}
+		}
+	}
+	if v, ok := bu.mutation.Title(); ok {
+		if err := bookmark.TitleValidator(v); err != nil {
+			return &ValidationError{Name: "title", err: fmt.Errorf(`ent: validator failed for field "Bookmark.title": %w`, err)}
+		}
+	}
 	if v, ok := bu.mutation.Note(); ok {
 		if err := bookmark.NoteValidator(v); err != nil {
 			return &ValidationError{Name: "note", err: fmt.Errorf(`ent: validator failed for field "Bookmark.note": %w`, err)}
 		}
-	}
-	if _, ok := bu.mutation.HaveSiteID(); bu.mutation.HaveSiteCleared() && !ok {
-		return errors.New(`ent: clearing a required unique edge "Bookmark.have_site"`)
 	}
 	if _, ok := bu.mutation.OwnerID(); bu.mutation.OwnerCleared() && !ok {
 		return errors.New(`ent: clearing a required unique edge "Bookmark.owner"`)
@@ -217,43 +212,14 @@ func (bu *BookmarkUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			}
 		}
 	}
+	if value, ok := bu.mutation.URL(); ok {
+		_spec.SetField(bookmark.FieldURL, field.TypeString, value)
+	}
+	if value, ok := bu.mutation.Title(); ok {
+		_spec.SetField(bookmark.FieldTitle, field.TypeString, value)
+	}
 	if value, ok := bu.mutation.Note(); ok {
 		_spec.SetField(bookmark.FieldNote, field.TypeString, value)
-	}
-	if bu.mutation.HaveSiteCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   bookmark.HaveSiteTable,
-			Columns: []string{bookmark.HaveSiteColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: site.FieldID,
-				},
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := bu.mutation.HaveSiteIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   bookmark.HaveSiteTable,
-			Columns: []string{bookmark.HaveSiteColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: site.FieldID,
-				},
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	if bu.mutation.OwnerCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -369,9 +335,15 @@ func (buo *BookmarkUpdateOne) SetUserID(i int) *BookmarkUpdateOne {
 	return buo
 }
 
-// SetSiteID sets the "site_id" field.
-func (buo *BookmarkUpdateOne) SetSiteID(i int) *BookmarkUpdateOne {
-	buo.mutation.SetSiteID(i)
+// SetURL sets the "url" field.
+func (buo *BookmarkUpdateOne) SetURL(s string) *BookmarkUpdateOne {
+	buo.mutation.SetURL(s)
+	return buo
+}
+
+// SetTitle sets the "title" field.
+func (buo *BookmarkUpdateOne) SetTitle(s string) *BookmarkUpdateOne {
+	buo.mutation.SetTitle(s)
 	return buo
 }
 
@@ -379,17 +351,6 @@ func (buo *BookmarkUpdateOne) SetSiteID(i int) *BookmarkUpdateOne {
 func (buo *BookmarkUpdateOne) SetNote(s string) *BookmarkUpdateOne {
 	buo.mutation.SetNote(s)
 	return buo
-}
-
-// SetHaveSiteID sets the "have_site" edge to the Site entity by ID.
-func (buo *BookmarkUpdateOne) SetHaveSiteID(id int) *BookmarkUpdateOne {
-	buo.mutation.SetHaveSiteID(id)
-	return buo
-}
-
-// SetHaveSite sets the "have_site" edge to the Site entity.
-func (buo *BookmarkUpdateOne) SetHaveSite(s *Site) *BookmarkUpdateOne {
-	return buo.SetHaveSiteID(s.ID)
 }
 
 // SetOwnerID sets the "owner" edge to the User entity by ID.
@@ -421,12 +382,6 @@ func (buo *BookmarkUpdateOne) AddTags(t ...*Tag) *BookmarkUpdateOne {
 // Mutation returns the BookmarkMutation object of the builder.
 func (buo *BookmarkUpdateOne) Mutation() *BookmarkMutation {
 	return buo.mutation
-}
-
-// ClearHaveSite clears the "have_site" edge to the Site entity.
-func (buo *BookmarkUpdateOne) ClearHaveSite() *BookmarkUpdateOne {
-	buo.mutation.ClearHaveSite()
-	return buo
 }
 
 // ClearOwner clears the "owner" edge to the User entity.
@@ -531,13 +486,20 @@ func (buo *BookmarkUpdateOne) ExecX(ctx context.Context) {
 
 // check runs all checks and user-defined validators on the builder.
 func (buo *BookmarkUpdateOne) check() error {
+	if v, ok := buo.mutation.URL(); ok {
+		if err := bookmark.URLValidator(v); err != nil {
+			return &ValidationError{Name: "url", err: fmt.Errorf(`ent: validator failed for field "Bookmark.url": %w`, err)}
+		}
+	}
+	if v, ok := buo.mutation.Title(); ok {
+		if err := bookmark.TitleValidator(v); err != nil {
+			return &ValidationError{Name: "title", err: fmt.Errorf(`ent: validator failed for field "Bookmark.title": %w`, err)}
+		}
+	}
 	if v, ok := buo.mutation.Note(); ok {
 		if err := bookmark.NoteValidator(v); err != nil {
 			return &ValidationError{Name: "note", err: fmt.Errorf(`ent: validator failed for field "Bookmark.note": %w`, err)}
 		}
-	}
-	if _, ok := buo.mutation.HaveSiteID(); buo.mutation.HaveSiteCleared() && !ok {
-		return errors.New(`ent: clearing a required unique edge "Bookmark.have_site"`)
 	}
 	if _, ok := buo.mutation.OwnerID(); buo.mutation.OwnerCleared() && !ok {
 		return errors.New(`ent: clearing a required unique edge "Bookmark.owner"`)
@@ -580,43 +542,14 @@ func (buo *BookmarkUpdateOne) sqlSave(ctx context.Context) (_node *Bookmark, err
 			}
 		}
 	}
+	if value, ok := buo.mutation.URL(); ok {
+		_spec.SetField(bookmark.FieldURL, field.TypeString, value)
+	}
+	if value, ok := buo.mutation.Title(); ok {
+		_spec.SetField(bookmark.FieldTitle, field.TypeString, value)
+	}
 	if value, ok := buo.mutation.Note(); ok {
 		_spec.SetField(bookmark.FieldNote, field.TypeString, value)
-	}
-	if buo.mutation.HaveSiteCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   bookmark.HaveSiteTable,
-			Columns: []string{bookmark.HaveSiteColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: site.FieldID,
-				},
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := buo.mutation.HaveSiteIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   bookmark.HaveSiteTable,
-			Columns: []string{bookmark.HaveSiteColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: site.FieldID,
-				},
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	if buo.mutation.OwnerCleared() {
 		edge := &sqlgraph.EdgeSpec{

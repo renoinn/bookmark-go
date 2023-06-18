@@ -22,19 +22,6 @@ func (f BookmarkFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, er
 	return f(ctx, mv)
 }
 
-// The SiteFunc type is an adapter to allow the use of ordinary
-// function as Site mutator.
-type SiteFunc func(context.Context, *ent.SiteMutation) (ent.Value, error)
-
-// Mutate calls f(ctx, m).
-func (f SiteFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
-	mv, ok := m.(*ent.SiteMutation)
-	if !ok {
-		return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.SiteMutation", m)
-	}
-	return f(ctx, mv)
-}
-
 // The TagFunc type is an adapter to allow the use of ordinary
 // function as Tag mutator.
 type TagFunc func(context.Context, *ent.TagMutation) (ent.Value, error)

@@ -9,9 +9,6 @@ import (
 // Bookmark is the predicate function for bookmark builders.
 type Bookmark func(*sql.Selector)
 
-// Site is the predicate function for site builders.
-type Site func(*sql.Selector)
-
 // Tag is the predicate function for tag builders.
 type Tag func(*sql.Selector)
 

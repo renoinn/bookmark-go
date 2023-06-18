@@ -11,7 +11,6 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/renoinn/bookmark-go/datasource/ent/bookmark"
-	"github.com/renoinn/bookmark-go/datasource/ent/site"
 	"github.com/renoinn/bookmark-go/datasource/ent/tag"
 	"github.com/renoinn/bookmark-go/datasource/ent/user"
 )
@@ -35,7 +34,6 @@ type OrderFunc func(*sql.Selector)
 func columnChecker(table string) func(string) error {
 	checks := map[string]func(string) bool{
 		bookmark.Table: bookmark.ValidColumn,
-		site.Table:     site.ValidColumn,
 		tag.Table:      tag.ValidColumn,
 		user.Table:     user.ValidColumn,
 	}

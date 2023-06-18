@@ -8,7 +8,6 @@ import (
 
 	"entgo.io/ent/dialect/sql"
 	"github.com/renoinn/bookmark-go/datasource/ent/bookmark"
-	"github.com/renoinn/bookmark-go/datasource/ent/site"
 	"github.com/renoinn/bookmark-go/datasource/ent/user"
 )
 
@@ -19,8 +18,10 @@ type Bookmark struct {
 	ID int `json:"id,omitempty"`
 	// UserID holds the value of the "user_id" field.
 	UserID int `json:"user_id,omitempty"`
-	// SiteID holds the value of the "site_id" field.
-	SiteID int `json:"site_id,omitempty"`
+	// URL holds the value of the "url" field.
+	URL string `json:"url,omitempty"`
+	// Title holds the value of the "title" field.
+	Title string `json:"title,omitempty"`
 	// Note holds the value of the "note" field.
 	Note string `json:"note,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
@@ -30,34 +31,19 @@ type Bookmark struct {
 
 // BookmarkEdges holds the relations/edges for other nodes in the graph.
 type BookmarkEdges struct {
-	// HaveSite holds the value of the have_site edge.
-	HaveSite *Site `json:"have_site,omitempty"`
 	// Owner holds the value of the owner edge.
 	Owner *User `json:"owner,omitempty"`
 	// Tags holds the value of the tags edge.
 	Tags []*Tag `json:"tags,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [3]bool
-}
-
-// HaveSiteOrErr returns the HaveSite value or an error if the edge
-// was not loaded in eager-loading, or loaded but was not found.
-func (e BookmarkEdges) HaveSiteOrErr() (*Site, error) {
-	if e.loadedTypes[0] {
-		if e.HaveSite == nil {
-			// Edge was loaded but was not found.
-			return nil, &NotFoundError{label: site.Label}
-		}
-		return e.HaveSite, nil
-	}
-	return nil, &NotLoadedError{edge: "have_site"}
+	loadedTypes [2]bool
 }
 
 // OwnerOrErr returns the Owner value or an error if the edge
 // was not loaded in eager-loading, or loaded but was not found.
 func (e BookmarkEdges) OwnerOrErr() (*User, error) {
-	if e.loadedTypes[1] {
+	if e.loadedTypes[0] {
 		if e.Owner == nil {
 			// Edge was loaded but was not found.
 			return nil, &NotFoundError{label: user.Label}
@@ -70,7 +56,7 @@ func (e BookmarkEdges) OwnerOrErr() (*User, error) {
 // TagsOrErr returns the Tags value or an error if the edge
 // was not loaded in eager-loading.
 func (e BookmarkEdges) TagsOrErr() ([]*Tag, error) {
-	if e.loadedTypes[2] {
+	if e.loadedTypes[1] {
 		return e.Tags, nil
 	}
 	return nil, &NotLoadedError{edge: "tags"}
@@ -81,9 +67,9 @@ func (*Bookmark) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case bookmark.FieldID, bookmark.FieldUserID, bookmark.FieldSiteID:
+		case bookmark.FieldID, bookmark.FieldUserID:
 			values[i] = new(sql.NullInt64)
-		case bookmark.FieldNote:
+		case bookmark.FieldURL, bookmark.FieldTitle, bookmark.FieldNote:
 			values[i] = new(sql.NullString)
 		default:
 			return nil, fmt.Errorf("unexpected column %q for type Bookmark", columns[i])
@@ -112,11 +98,17 @@ func (b *Bookmark) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				b.UserID = int(value.Int64)
 			}
-		case bookmark.FieldSiteID:
-			if value, ok := values[i].(*sql.NullInt64); !ok {
-				return fmt.Errorf("unexpected type %T for field site_id", values[i])
+		case bookmark.FieldURL:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field url", values[i])
 			} else if value.Valid {
-				b.SiteID = int(value.Int64)
+				b.URL = value.String
+			}
+		case bookmark.FieldTitle:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field title", values[i])
+			} else if value.Valid {
+				b.Title = value.String
 			}
 		case bookmark.FieldNote:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -127,11 +119,6 @@ func (b *Bookmark) assignValues(columns []string, values []any) error {
 		}
 	}
 	return nil
-}
-
-// QueryHaveSite queries the "have_site" edge of the Bookmark entity.
-func (b *Bookmark) QueryHaveSite() *SiteQuery {
-	return (&BookmarkClient{config: b.config}).QueryHaveSite(b)
 }
 
 // QueryOwner queries the "owner" edge of the Bookmark entity.
@@ -170,8 +157,11 @@ func (b *Bookmark) String() string {
 	builder.WriteString("user_id=")
 	builder.WriteString(fmt.Sprintf("%v", b.UserID))
 	builder.WriteString(", ")
-	builder.WriteString("site_id=")
-	builder.WriteString(fmt.Sprintf("%v", b.SiteID))
+	builder.WriteString("url=")
+	builder.WriteString(b.URL)
+	builder.WriteString(", ")
+	builder.WriteString("title=")
+	builder.WriteString(b.Title)
 	builder.WriteString(", ")
 	builder.WriteString("note=")
 	builder.WriteString(b.Note)

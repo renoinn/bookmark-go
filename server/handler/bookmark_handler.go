@@ -4,8 +4,8 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/renoinn/bookmark-go/server/response"
 	"github.com/renoinn/bookmark-go/server/repository"
+	"github.com/renoinn/bookmark-go/server/response"
 )
 
 type BookmarkHandler interface {
@@ -15,18 +15,15 @@ type BookmarkHandler interface {
 
 type bookmarkHandler struct {
 	userRepository     repository.UserRepository
-	siteRepository     repository.SiteRepository
 	bookmarkRepository repository.BookmarkRepository
 }
 
 func NewBookmarkHandler(
 	userRepository repository.UserRepository,
-	siteRepository repository.SiteRepository,
 	bookmarkRepository repository.BookmarkRepository,
 ) BookmarkHandler {
 	return &bookmarkHandler{
 		userRepository,
-		siteRepository,
 		bookmarkRepository,
 	}
 }
@@ -42,8 +39,8 @@ func (bh *bookmarkHandler) GetBookmarks(ctx *gin.Context) {
 	for _, value := range bookmarks {
 		data := response.Bookmark{
 			BookmarkID: uint64(value.ID),
-			SiteTitle:  value.Edges.HaveSite.Title,
-			SiteURL:    value.Edges.HaveSite.URL,
+			SiteTitle:  value.Title,
+			SiteURL:    value.URL,
 			Note:       value.Note,
 		}
 		res = append(res, data)
@@ -70,20 +67,15 @@ func (bh *bookmarkHandler) PostBookmark(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, "{msg: user not found}")
 	}
 
-	s, err := bh.siteRepository.CreateSite(ctx, form.Title, form.URL)
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, "{msg: faild create site}")
-	}
-
-	b, err := bh.bookmarkRepository.CreateBookmark(ctx, u, s, form.Note)
+	b, err := bh.bookmarkRepository.CreateBookmark(ctx, u, form.Title, form.URL, form.Note)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, "{msg: faild create bookmark}")
 	}
 
 	res := response.Bookmark{
 		BookmarkID: uint64(b.ID),
-		SiteTitle:  b.Edges.HaveSite.Title,
-		SiteURL:    b.Edges.HaveSite.URL,
+		SiteTitle:  b.Title,
+		SiteURL:    b.URL,
 		Note:       b.Note,
 	}
 

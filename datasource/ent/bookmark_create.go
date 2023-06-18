@@ -10,7 +10,6 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/renoinn/bookmark-go/datasource/ent/bookmark"
-	"github.com/renoinn/bookmark-go/datasource/ent/site"
 	"github.com/renoinn/bookmark-go/datasource/ent/tag"
 	"github.com/renoinn/bookmark-go/datasource/ent/user"
 )
@@ -28,9 +27,15 @@ func (bc *BookmarkCreate) SetUserID(i int) *BookmarkCreate {
 	return bc
 }
 
-// SetSiteID sets the "site_id" field.
-func (bc *BookmarkCreate) SetSiteID(i int) *BookmarkCreate {
-	bc.mutation.SetSiteID(i)
+// SetURL sets the "url" field.
+func (bc *BookmarkCreate) SetURL(s string) *BookmarkCreate {
+	bc.mutation.SetURL(s)
+	return bc
+}
+
+// SetTitle sets the "title" field.
+func (bc *BookmarkCreate) SetTitle(s string) *BookmarkCreate {
+	bc.mutation.SetTitle(s)
 	return bc
 }
 
@@ -38,17 +43,6 @@ func (bc *BookmarkCreate) SetSiteID(i int) *BookmarkCreate {
 func (bc *BookmarkCreate) SetNote(s string) *BookmarkCreate {
 	bc.mutation.SetNote(s)
 	return bc
-}
-
-// SetHaveSiteID sets the "have_site" edge to the Site entity by ID.
-func (bc *BookmarkCreate) SetHaveSiteID(id int) *BookmarkCreate {
-	bc.mutation.SetHaveSiteID(id)
-	return bc
-}
-
-// SetHaveSite sets the "have_site" edge to the Site entity.
-func (bc *BookmarkCreate) SetHaveSite(s *Site) *BookmarkCreate {
-	return bc.SetHaveSiteID(s.ID)
 }
 
 // SetOwnerID sets the "owner" edge to the User entity by ID.
@@ -156,8 +150,21 @@ func (bc *BookmarkCreate) check() error {
 	if _, ok := bc.mutation.UserID(); !ok {
 		return &ValidationError{Name: "user_id", err: errors.New(`ent: missing required field "Bookmark.user_id"`)}
 	}
-	if _, ok := bc.mutation.SiteID(); !ok {
-		return &ValidationError{Name: "site_id", err: errors.New(`ent: missing required field "Bookmark.site_id"`)}
+	if _, ok := bc.mutation.URL(); !ok {
+		return &ValidationError{Name: "url", err: errors.New(`ent: missing required field "Bookmark.url"`)}
+	}
+	if v, ok := bc.mutation.URL(); ok {
+		if err := bookmark.URLValidator(v); err != nil {
+			return &ValidationError{Name: "url", err: fmt.Errorf(`ent: validator failed for field "Bookmark.url": %w`, err)}
+		}
+	}
+	if _, ok := bc.mutation.Title(); !ok {
+		return &ValidationError{Name: "title", err: errors.New(`ent: missing required field "Bookmark.title"`)}
+	}
+	if v, ok := bc.mutation.Title(); ok {
+		if err := bookmark.TitleValidator(v); err != nil {
+			return &ValidationError{Name: "title", err: fmt.Errorf(`ent: validator failed for field "Bookmark.title": %w`, err)}
+		}
 	}
 	if _, ok := bc.mutation.Note(); !ok {
 		return &ValidationError{Name: "note", err: errors.New(`ent: missing required field "Bookmark.note"`)}
@@ -166,9 +173,6 @@ func (bc *BookmarkCreate) check() error {
 		if err := bookmark.NoteValidator(v); err != nil {
 			return &ValidationError{Name: "note", err: fmt.Errorf(`ent: validator failed for field "Bookmark.note": %w`, err)}
 		}
-	}
-	if _, ok := bc.mutation.HaveSiteID(); !ok {
-		return &ValidationError{Name: "have_site", err: errors.New(`ent: missing required edge "Bookmark.have_site"`)}
 	}
 	if _, ok := bc.mutation.OwnerID(); !ok {
 		return &ValidationError{Name: "owner", err: errors.New(`ent: missing required edge "Bookmark.owner"`)}
@@ -200,29 +204,17 @@ func (bc *BookmarkCreate) createSpec() (*Bookmark, *sqlgraph.CreateSpec) {
 			},
 		}
 	)
+	if value, ok := bc.mutation.URL(); ok {
+		_spec.SetField(bookmark.FieldURL, field.TypeString, value)
+		_node.URL = value
+	}
+	if value, ok := bc.mutation.Title(); ok {
+		_spec.SetField(bookmark.FieldTitle, field.TypeString, value)
+		_node.Title = value
+	}
 	if value, ok := bc.mutation.Note(); ok {
 		_spec.SetField(bookmark.FieldNote, field.TypeString, value)
 		_node.Note = value
-	}
-	if nodes := bc.mutation.HaveSiteIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   bookmark.HaveSiteTable,
-			Columns: []string{bookmark.HaveSiteColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: site.FieldID,
-				},
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_node.SiteID = nodes[0]
-		_spec.Edges = append(_spec.Edges, edge)
 	}
 	if nodes := bc.mutation.OwnerIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{

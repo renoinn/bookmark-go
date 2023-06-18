@@ -86,10 +86,17 @@ func UserID(v int) predicate.Bookmark {
 	})
 }
 
-// SiteID applies equality check predicate on the "site_id" field. It's identical to SiteIDEQ.
-func SiteID(v int) predicate.Bookmark {
+// URL applies equality check predicate on the "url" field. It's identical to URLEQ.
+func URL(v string) predicate.Bookmark {
 	return predicate.Bookmark(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldSiteID), v))
+		s.Where(sql.EQ(s.C(FieldURL), v))
+	})
+}
+
+// Title applies equality check predicate on the "title" field. It's identical to TitleEQ.
+func Title(v string) predicate.Bookmark {
+	return predicate.Bookmark(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldTitle), v))
 	})
 }
 
@@ -136,39 +143,201 @@ func UserIDNotIn(vs ...int) predicate.Bookmark {
 	})
 }
 
-// SiteIDEQ applies the EQ predicate on the "site_id" field.
-func SiteIDEQ(v int) predicate.Bookmark {
+// URLEQ applies the EQ predicate on the "url" field.
+func URLEQ(v string) predicate.Bookmark {
 	return predicate.Bookmark(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldSiteID), v))
+		s.Where(sql.EQ(s.C(FieldURL), v))
 	})
 }
 
-// SiteIDNEQ applies the NEQ predicate on the "site_id" field.
-func SiteIDNEQ(v int) predicate.Bookmark {
+// URLNEQ applies the NEQ predicate on the "url" field.
+func URLNEQ(v string) predicate.Bookmark {
 	return predicate.Bookmark(func(s *sql.Selector) {
-		s.Where(sql.NEQ(s.C(FieldSiteID), v))
+		s.Where(sql.NEQ(s.C(FieldURL), v))
 	})
 }
 
-// SiteIDIn applies the In predicate on the "site_id" field.
-func SiteIDIn(vs ...int) predicate.Bookmark {
+// URLIn applies the In predicate on the "url" field.
+func URLIn(vs ...string) predicate.Bookmark {
 	v := make([]any, len(vs))
 	for i := range v {
 		v[i] = vs[i]
 	}
 	return predicate.Bookmark(func(s *sql.Selector) {
-		s.Where(sql.In(s.C(FieldSiteID), v...))
+		s.Where(sql.In(s.C(FieldURL), v...))
 	})
 }
 
-// SiteIDNotIn applies the NotIn predicate on the "site_id" field.
-func SiteIDNotIn(vs ...int) predicate.Bookmark {
+// URLNotIn applies the NotIn predicate on the "url" field.
+func URLNotIn(vs ...string) predicate.Bookmark {
 	v := make([]any, len(vs))
 	for i := range v {
 		v[i] = vs[i]
 	}
 	return predicate.Bookmark(func(s *sql.Selector) {
-		s.Where(sql.NotIn(s.C(FieldSiteID), v...))
+		s.Where(sql.NotIn(s.C(FieldURL), v...))
+	})
+}
+
+// URLGT applies the GT predicate on the "url" field.
+func URLGT(v string) predicate.Bookmark {
+	return predicate.Bookmark(func(s *sql.Selector) {
+		s.Where(sql.GT(s.C(FieldURL), v))
+	})
+}
+
+// URLGTE applies the GTE predicate on the "url" field.
+func URLGTE(v string) predicate.Bookmark {
+	return predicate.Bookmark(func(s *sql.Selector) {
+		s.Where(sql.GTE(s.C(FieldURL), v))
+	})
+}
+
+// URLLT applies the LT predicate on the "url" field.
+func URLLT(v string) predicate.Bookmark {
+	return predicate.Bookmark(func(s *sql.Selector) {
+		s.Where(sql.LT(s.C(FieldURL), v))
+	})
+}
+
+// URLLTE applies the LTE predicate on the "url" field.
+func URLLTE(v string) predicate.Bookmark {
+	return predicate.Bookmark(func(s *sql.Selector) {
+		s.Where(sql.LTE(s.C(FieldURL), v))
+	})
+}
+
+// URLContains applies the Contains predicate on the "url" field.
+func URLContains(v string) predicate.Bookmark {
+	return predicate.Bookmark(func(s *sql.Selector) {
+		s.Where(sql.Contains(s.C(FieldURL), v))
+	})
+}
+
+// URLHasPrefix applies the HasPrefix predicate on the "url" field.
+func URLHasPrefix(v string) predicate.Bookmark {
+	return predicate.Bookmark(func(s *sql.Selector) {
+		s.Where(sql.HasPrefix(s.C(FieldURL), v))
+	})
+}
+
+// URLHasSuffix applies the HasSuffix predicate on the "url" field.
+func URLHasSuffix(v string) predicate.Bookmark {
+	return predicate.Bookmark(func(s *sql.Selector) {
+		s.Where(sql.HasSuffix(s.C(FieldURL), v))
+	})
+}
+
+// URLEqualFold applies the EqualFold predicate on the "url" field.
+func URLEqualFold(v string) predicate.Bookmark {
+	return predicate.Bookmark(func(s *sql.Selector) {
+		s.Where(sql.EqualFold(s.C(FieldURL), v))
+	})
+}
+
+// URLContainsFold applies the ContainsFold predicate on the "url" field.
+func URLContainsFold(v string) predicate.Bookmark {
+	return predicate.Bookmark(func(s *sql.Selector) {
+		s.Where(sql.ContainsFold(s.C(FieldURL), v))
+	})
+}
+
+// TitleEQ applies the EQ predicate on the "title" field.
+func TitleEQ(v string) predicate.Bookmark {
+	return predicate.Bookmark(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldTitle), v))
+	})
+}
+
+// TitleNEQ applies the NEQ predicate on the "title" field.
+func TitleNEQ(v string) predicate.Bookmark {
+	return predicate.Bookmark(func(s *sql.Selector) {
+		s.Where(sql.NEQ(s.C(FieldTitle), v))
+	})
+}
+
+// TitleIn applies the In predicate on the "title" field.
+func TitleIn(vs ...string) predicate.Bookmark {
+	v := make([]any, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Bookmark(func(s *sql.Selector) {
+		s.Where(sql.In(s.C(FieldTitle), v...))
+	})
+}
+
+// TitleNotIn applies the NotIn predicate on the "title" field.
+func TitleNotIn(vs ...string) predicate.Bookmark {
+	v := make([]any, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Bookmark(func(s *sql.Selector) {
+		s.Where(sql.NotIn(s.C(FieldTitle), v...))
+	})
+}
+
+// TitleGT applies the GT predicate on the "title" field.
+func TitleGT(v string) predicate.Bookmark {
+	return predicate.Bookmark(func(s *sql.Selector) {
+		s.Where(sql.GT(s.C(FieldTitle), v))
+	})
+}
+
+// TitleGTE applies the GTE predicate on the "title" field.
+func TitleGTE(v string) predicate.Bookmark {
+	return predicate.Bookmark(func(s *sql.Selector) {
+		s.Where(sql.GTE(s.C(FieldTitle), v))
+	})
+}
+
+// TitleLT applies the LT predicate on the "title" field.
+func TitleLT(v string) predicate.Bookmark {
+	return predicate.Bookmark(func(s *sql.Selector) {
+		s.Where(sql.LT(s.C(FieldTitle), v))
+	})
+}
+
+// TitleLTE applies the LTE predicate on the "title" field.
+func TitleLTE(v string) predicate.Bookmark {
+	return predicate.Bookmark(func(s *sql.Selector) {
+		s.Where(sql.LTE(s.C(FieldTitle), v))
+	})
+}
+
+// TitleContains applies the Contains predicate on the "title" field.
+func TitleContains(v string) predicate.Bookmark {
+	return predicate.Bookmark(func(s *sql.Selector) {
+		s.Where(sql.Contains(s.C(FieldTitle), v))
+	})
+}
+
+// TitleHasPrefix applies the HasPrefix predicate on the "title" field.
+func TitleHasPrefix(v string) predicate.Bookmark {
+	return predicate.Bookmark(func(s *sql.Selector) {
+		s.Where(sql.HasPrefix(s.C(FieldTitle), v))
+	})
+}
+
+// TitleHasSuffix applies the HasSuffix predicate on the "title" field.
+func TitleHasSuffix(v string) predicate.Bookmark {
+	return predicate.Bookmark(func(s *sql.Selector) {
+		s.Where(sql.HasSuffix(s.C(FieldTitle), v))
+	})
+}
+
+// TitleEqualFold applies the EqualFold predicate on the "title" field.
+func TitleEqualFold(v string) predicate.Bookmark {
+	return predicate.Bookmark(func(s *sql.Selector) {
+		s.Where(sql.EqualFold(s.C(FieldTitle), v))
+	})
+}
+
+// TitleContainsFold applies the ContainsFold predicate on the "title" field.
+func TitleContainsFold(v string) predicate.Bookmark {
+	return predicate.Bookmark(func(s *sql.Selector) {
+		s.Where(sql.ContainsFold(s.C(FieldTitle), v))
 	})
 }
 
@@ -268,34 +437,6 @@ func NoteEqualFold(v string) predicate.Bookmark {
 func NoteContainsFold(v string) predicate.Bookmark {
 	return predicate.Bookmark(func(s *sql.Selector) {
 		s.Where(sql.ContainsFold(s.C(FieldNote), v))
-	})
-}
-
-// HasHaveSite applies the HasEdge predicate on the "have_site" edge.
-func HasHaveSite() predicate.Bookmark {
-	return predicate.Bookmark(func(s *sql.Selector) {
-		step := sqlgraph.NewStep(
-			sqlgraph.From(Table, FieldID),
-			sqlgraph.To(HaveSiteTable, FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, HaveSiteTable, HaveSiteColumn),
-		)
-		sqlgraph.HasNeighbors(s, step)
-	})
-}
-
-// HasHaveSiteWith applies the HasEdge predicate on the "have_site" edge with a given conditions (other predicates).
-func HasHaveSiteWith(preds ...predicate.Site) predicate.Bookmark {
-	return predicate.Bookmark(func(s *sql.Selector) {
-		step := sqlgraph.NewStep(
-			sqlgraph.From(Table, FieldID),
-			sqlgraph.To(HaveSiteInverseTable, FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, HaveSiteTable, HaveSiteColumn),
-		)
-		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
-			for _, p := range preds {
-				p(s)
-			}
-		})
 	})
 }
 
